@@ -50,7 +50,7 @@ impl Game {
         }
     }
 
-    pub fn run<F: Fn(&mut Canvas<Window>, &mut EventPump)>(&self, func: F) -> Result<()> {
+    pub fn run<F: Fn(&mut Canvas<Window>, Vec<Event>)>(&self, func: F) -> Result<()> {
         let sdl_context = sdl2::init()?;
         let video_subsystem = sdl_context.video()?;
 
@@ -67,7 +67,8 @@ impl Game {
             if self.stopped.get() {
                 break;
             }
-            func(&mut canvas, &mut event_pump);
+            let events = event_pump.poll_iter().collect::<Vec<Event>>();
+            func(&mut canvas, events);
             canvas.present();
         }
 
