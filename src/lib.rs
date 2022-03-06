@@ -1,5 +1,13 @@
+use std::cell::Cell;
+
 use sdl2::{video::{WindowBuildError, Window}, IntegerOrSdlError, render::Canvas, EventPump};
 
+pub use sdl2::pixels::Color;
+pub use sdl2::keyboard::Keycode;
+pub use sdl2::event::Event;
+
+
+#[derive(Debug)]
 pub struct CatboxError(String);
 
 impl From<WindowBuildError> for CatboxError {
@@ -23,9 +31,10 @@ impl From<IntegerOrSdlError> for CatboxError {
 pub type Result<T> = std::result::Result<T, CatboxError>;
 
 pub struct Game {
-    title: String,
-    width: u32,
-    height: u32,
+    pub title: String,
+    pub width: u32,
+    pub height: u32,
+    stopped: Cell<bool>
 }
 
 impl Game {
@@ -33,11 +42,12 @@ impl Game {
         Self {
             title: title.to_string(),
             width,
-            height
+            height,
+            stopped: Cell::new(false)
         }
     }
 
-    pub fn run<F: Fn(&Canvas<Window>, &EventPump)>(&self, func: F) -> Result<()> {
+    pub fn run<F: Fn(&mut Canvas<Window>, &mut EventPump)>(&self, func: F) -> Result<()> {
         let sdl_context = sdl2::init()?;
         let video_subsystem = sdl_context.video()?;
 
@@ -50,10 +60,17 @@ impl Game {
         let mut event_pump = sdl_context.event_pump()?;
 
         loop {
-            func(&canvas, &event_pump);
+            if self.stopped.get() {
+                break;
+            }
+            func(&mut canvas, &mut event_pump);
             canvas.present();
         }
 
         Ok(())
+    }
+
+    pub fn terminate(&self) {
+        self.stopped.set(true);
     }
 }
