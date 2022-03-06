@@ -1,11 +1,14 @@
 use std::cell::Cell;
 
-use sdl2::{video::{WindowBuildError, Window}, IntegerOrSdlError, render::Canvas, EventPump};
+use sdl2::{
+    render::Canvas,
+    video::{Window, WindowBuildError},
+    EventPump, IntegerOrSdlError,
+};
 
-pub use sdl2::pixels::Color;
-pub use sdl2::keyboard::Keycode;
 pub use sdl2::event::Event;
-
+pub use sdl2::keyboard::Keycode;
+pub use sdl2::pixels::Color;
 
 #[derive(Debug)]
 pub struct CatboxError(String);
@@ -34,7 +37,7 @@ pub struct Game {
     pub title: String,
     pub width: u32,
     pub height: u32,
-    stopped: Cell<bool>
+    stopped: Cell<bool>,
 }
 
 impl Game {
@@ -43,7 +46,7 @@ impl Game {
             title: title.to_string(),
             width,
             height,
-            stopped: Cell::new(false)
+            stopped: Cell::new(false),
         }
     }
 
@@ -51,7 +54,8 @@ impl Game {
         let sdl_context = sdl2::init()?;
         let video_subsystem = sdl_context.video()?;
 
-        let window = video_subsystem.window(&self.title, self.width, self.height)
+        let window = video_subsystem
+            .window(&self.title, self.width, self.height)
             .position_centered()
             .build()?;
 
