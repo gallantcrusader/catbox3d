@@ -3,12 +3,24 @@ use std::cell::Cell;
 use sdl2::{
     render::Canvas,
     video::{Window, WindowBuildError},
-    EventPump, IntegerOrSdlError,
+    IntegerOrSdlError,
 };
 
 pub use sdl2::event::Event;
 pub use sdl2::keyboard::Keycode;
 pub use sdl2::pixels::Color;
+
+#[macro_export]
+macro_rules! cloned {
+    ($thing:ident => $e:expr) => {
+        let $thing = $thing.clone();
+        $e
+    };
+    ($($thing:ident),* => $e:expr) => {
+        $( let $thing = $thing.clone(); )*
+        $e
+    }
+}
 
 #[derive(Debug)]
 pub struct CatboxError(String);
@@ -50,7 +62,7 @@ impl Game {
         }
     }
 
-    pub fn run<F: Fn(&mut Canvas<Window>, Vec<Event>)>(&self, func: F) -> Result<()> {
+    pub fn run<F: FnMut(&mut Canvas<Window>, Vec<Event>)>(&self, mut func: F) -> Result<()> {
         let sdl_context = sdl2::init()?;
         let video_subsystem = sdl_context.video()?;
 
