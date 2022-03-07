@@ -71,7 +71,7 @@ impl Iterator for Events {
 
 pub struct Sprite {
     rect: Rect,
-    surf: Surface<'static>
+    surf: Surface<'static>,
 }
 
 impl Sprite {
@@ -84,11 +84,14 @@ impl Sprite {
 
         Ok(Self {
             rect: dest_rect,
-            surf
+            surf,
         })
     }
 
     pub fn draw(&self, canvas: &mut Canvas<Window>, events: &Events) -> Result<()> {
+        canvas.fill_rect(None)?;
+        canvas.clear();
+
         let mut surface = canvas.window().surface(events.as_ref())?;
 
         self.surf.blit(None, &mut *surface, self.rect)?;
@@ -96,6 +99,14 @@ impl Sprite {
         surface.finish()?;
 
         Ok(())
+    }
+
+    pub fn translate(&mut self, position: (i32, i32)) {
+        let new_x = self.rect.x() - position.0;
+        let new_y = self.rect.y() - position.1;
+
+        self.rect.set_x(new_x);
+        self.rect.set_y(new_y);
     }
 }
 
@@ -127,18 +138,21 @@ impl Game {
 
         let mut canvas = window.into_canvas().build()?;
 
-        let mut event_pump = sdl_context.event_pump()?;
+        let event_pump = sdl_context.event_pump()?;
 
         let mut events = Events {
             pump: event_pump
         };
 
+
         loop {
             if self.stopped.get() {
                 break;
             }
+            canvas.set_draw_color(Color::RGB(0, 0, 0));
+            canvas.clear();
             func(&mut canvas, &mut events);
-            canvas.present();
+            // canvas.present();
         }
 
         Ok(())
