@@ -2,8 +2,10 @@ use std::{cell::Cell, path::Path};
 
 use sdl2::{
     render::Canvas,
-    video::{Window, WindowBuildError, WindowSurfaceRef},
-    IntegerOrSdlError, rect::Rect, surface::Surface, rwops::RWops, image::ImageRWops, EventPump, event::EventPollIterator,
+    rwops::RWops,
+    surface::Surface,
+    video::{Window, WindowBuildError},
+    EventPump, IntegerOrSdlError, image::ImageRWops, rect::Rect,
 };
 
 pub use sdl2::event::Event;
@@ -46,7 +48,7 @@ impl From<IntegerOrSdlError> for CatboxError {
 pub type Result<T> = std::result::Result<T, CatboxError>;
 
 pub struct Events {
-    pump: EventPump
+    pump: EventPump,
 }
 
 impl AsRef<EventPump> for Events {
@@ -77,7 +79,7 @@ pub struct Sprite {
 impl Sprite {
     pub fn new<P: AsRef<Path>>(path: P, x: i32, y: i32) -> Result<Self> {
         let ops = RWops::from_file(path, "r")?;
-        let surf = ops.load()?; 
+        let surf = ops.load()?;
 
         let srect = surf.rect();
         let dest_rect: Rect = Rect::from_center((x, y), srect.width(), srect.height());
@@ -140,10 +142,7 @@ impl Game {
 
         let event_pump = sdl_context.event_pump()?;
 
-        let mut events = Events {
-            pump: event_pump
-        };
-
+        let mut events = Events { pump: event_pump };
 
         loop {
             if self.stopped.get() {
@@ -152,7 +151,6 @@ impl Game {
             canvas.set_draw_color(Color::RGB(0, 0, 0));
             canvas.clear();
             func(&mut canvas, &mut events);
-            // canvas.present();
         }
 
         Ok(())
