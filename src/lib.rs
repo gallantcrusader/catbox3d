@@ -1,9 +1,9 @@
-use std::cell::Cell;
+use std::{cell::Cell, path::Path};
 
 use sdl2::{
     render::Canvas,
-    video::{Window, WindowBuildError},
-    IntegerOrSdlError,
+    video::{Window, WindowBuildError, WindowSurfaceRef},
+    IntegerOrSdlError, rect::Rect, surface::Surface, rwops::RWops, image::ImageRWops,
 };
 
 pub use sdl2::event::Event;
@@ -44,6 +44,30 @@ impl From<IntegerOrSdlError> for CatboxError {
 }
 
 pub type Result<T> = std::result::Result<T, CatboxError>;
+
+pub struct Sprite {
+    rect: Rect,
+    surf: Surface<'static>
+}
+
+impl Sprite {
+    pub fn new<P: AsRef<Path>>(path: P, x: i32, y: i32) -> Result<Self> {
+        let ops = RWops::from_file(path, "r")?;
+        let surf = ops.load()?; 
+
+        let srect = surf.rect();
+        let dest_rect: Rect = Rect::new(x, y, srect.width(), srect.height());
+
+        Ok(Self {
+            rect: dest_rect,
+            surf
+        })
+    }
+
+    pub fn draw(&self, canvas: Canvas<Window>) {
+        let surface = canvas.window();
+    }
+}
 
 pub struct Game {
     pub title: String,
