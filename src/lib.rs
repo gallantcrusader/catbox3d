@@ -3,7 +3,7 @@ use std::{cell::Cell, path::Path};
 use sdl2::{
     render::Canvas,
     video::{Window, WindowBuildError, WindowSurfaceRef},
-    IntegerOrSdlError, rect::Rect, surface::Surface, rwops::RWops, image::ImageRWops,
+    IntegerOrSdlError, rect::Rect, surface::Surface, rwops::RWops, image::ImageRWops, EventPump, event::EventPollIterator,
 };
 
 pub use sdl2::event::Event;
@@ -44,6 +44,30 @@ impl From<IntegerOrSdlError> for CatboxError {
 }
 
 pub type Result<T> = std::result::Result<T, CatboxError>;
+
+pub struct Events {
+    pump: EventPump
+}
+
+impl AsRef<EventPump> for Events {
+    fn as_ref(&self) -> &EventPump {
+        &self.pump
+    }
+}
+
+impl AsMut<EventPump> for Events {
+    fn as_mut(&mut self) -> &mut EventPump {
+        &mut self.pump
+    }
+}
+
+impl Iterator for Events {
+    type Item = Event;
+
+    fn next(&mut self) -> Option<Event> {
+        self.pump.poll_event()
+    }
+}
 
 pub struct Sprite {
     rect: Rect,
@@ -86,7 +110,7 @@ impl Game {
         }
     }
 
-    pub fn run<F: FnMut(&mut Canvas<Window>, Vec<Event>)>(&self, mut func: F) -> Result<()> {
+    pub fn run<F: FnMut(&mut Canvas<Window>, &mut Events)>(&self, mut func: F) -> Result<()> {
         let sdl_context = sdl2::init()?;
         let video_subsystem = sdl_context.video()?;
 
@@ -99,12 +123,15 @@ impl Game {
 
         let mut event_pump = sdl_context.event_pump()?;
 
+        let mut events = Events {
+            pump: event_pump
+        };
+
         loop {
             if self.stopped.get() {
                 break;
             }
-            let events = event_pump.poll_iter().collect::<Vec<Event>>();
-            func(&mut canvas, events);
+            func(&mut canvas, &mut events);
             canvas.present();
         }
 
