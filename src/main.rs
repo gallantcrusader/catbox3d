@@ -3,7 +3,7 @@ use catbox::{Event, Game, Keycode, Sprite};
 fn main() {
     let game = Game::new("catbox demo", 1000, 800);
 
-    let mut s = Sprite::new("/home/yashkarandikar/code/catbox/duck.png", 500, 400).unwrap();
+    let mut s = Sprite::new("duck.png", 500, 400).unwrap();
     game.run(|canvas, event_pump| {
         s.draw(canvas, event_pump).unwrap();
 
