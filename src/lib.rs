@@ -80,7 +80,7 @@ impl Sprite {
         let surf = ops.load()?; 
 
         let srect = surf.rect();
-        let dest_rect: Rect = Rect::new(x, y, srect.width(), srect.height());
+        let dest_rect: Rect = Rect::from_center((x, y), srect.width(), srect.height());
 
         Ok(Self {
             rect: dest_rect,
@@ -88,8 +88,14 @@ impl Sprite {
         })
     }
 
-    pub fn draw(&self, canvas: Canvas<Window>) {
-        let surface = canvas.window();
+    pub fn draw(&self, canvas: &mut Canvas<Window>, events: &Events) -> Result<()> {
+        let mut surface = canvas.window().surface(events.as_ref())?;
+
+        self.surf.blit(None, &mut *surface, self.rect)?;
+
+        surface.finish()?;
+
+        Ok(())
     }
 }
 
