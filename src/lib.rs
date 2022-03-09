@@ -1,11 +1,13 @@
 use std::{cell::Cell, path::Path};
 
 use sdl2::{
-    render::Canvas,
+    image::ImageRWops,
+    rect::Rect,
+    render::{Canvas, TextureValueError},
     rwops::RWops,
     surface::Surface,
     video::{Window, WindowBuildError},
-    EventPump, IntegerOrSdlError, image::ImageRWops, rect::Rect,
+    EventPump, IntegerOrSdlError,
 };
 
 pub use sdl2::event::Event;
@@ -41,6 +43,12 @@ impl From<String> for CatboxError {
 
 impl From<IntegerOrSdlError> for CatboxError {
     fn from(e: IntegerOrSdlError) -> Self {
+        CatboxError(format!("{}", e))
+    }
+}
+
+impl From<TextureValueError> for CatboxError {
+    fn from(e: TextureValueError) -> Self {
         CatboxError(format!("{}", e))
     }
 }
@@ -90,15 +98,13 @@ impl Sprite {
         })
     }
 
-    pub fn draw(&self, canvas: &mut Canvas<Window>, events: &Events) -> Result<()> {
+    pub fn draw(&mut self, canvas: &mut Canvas<Window>) -> Result<()> {
+        let creator = canvas.texture_creator();
+        let text = creator.create_texture_from_surface(&self.surf)?;
+
         canvas.fill_rect(None)?;
         canvas.clear();
-
-        let mut surface = canvas.window().surface(events.as_ref())?;
-
-        self.surf.blit(None, &mut *surface, self.rect)?;
-
-        surface.finish()?;
+        canvas.copy_ex(&text, None, self.rect, 0.0, None, false, false)?;
 
         Ok(())
     }
@@ -148,9 +154,8 @@ impl Game {
             if self.stopped.get() {
                 break;
             }
-            canvas.set_draw_color(Color::RGB(0, 0, 0));
-            canvas.clear();
             func(&mut canvas, &mut events);
+            canvas.present();
         }
 
         Ok(())

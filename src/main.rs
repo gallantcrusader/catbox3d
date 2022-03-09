@@ -5,8 +5,6 @@ fn main() {
 
     let mut s = Sprite::new("duck.png", 500, 400).unwrap();
     game.run(|canvas, event_pump| {
-        s.draw(canvas, event_pump).unwrap();
-
         for event in event_pump {
             match event {
                 Event::Quit { .. }
@@ -19,8 +17,8 @@ fn main() {
                     let offset = match keycode.unwrap() {
                         Keycode::W | Keycode::Up => (0, 5),
                         Keycode::S | Keycode::Down => (0, -5),
-                        Keycode::A | Keycode::Left => (-5, 0),
-                        Keycode::D | Keycode::Right => (5, 0),
+                        Keycode::A | Keycode::Left => (5, 0),
+                        Keycode::D | Keycode::Right => (-5, 0),
                         _ => (0, 0),
                     };
 
@@ -29,6 +27,8 @@ fn main() {
                 _ => {}
             }
         }
+
+        s.draw(canvas).unwrap();
     })
     .unwrap();
 }
