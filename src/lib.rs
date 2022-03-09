@@ -148,6 +148,8 @@ impl Game {
         let window = video_subsystem
             .window(&self.title, self.width, self.height)
             .position_centered()
+            // .opengl()
+            .vulkan()
             .build()?;
 
         let mut canvas = window.into_canvas().build()?;
