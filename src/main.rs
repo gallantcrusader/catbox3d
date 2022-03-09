@@ -8,6 +8,14 @@ fn main() {
     game.run(|canvas, event_pump| {
         i = (i + 1.0) % 360.0;
 
+        let (start_x, start_y) = s.position();
+        let m = sdl2::mouse::MouseState::new(event_pump.as_ref());
+        let x_diff = m.x() - start_x;
+        let y_diff = m.y() - start_y;
+
+        let angle = (y_diff as f64).atan2(x_diff as f64);
+        s.angle(angle.to_degrees());
+
         for event in event_pump {
             match event {
                 Event::Quit { .. }
@@ -30,8 +38,8 @@ fn main() {
                 _ => {}
             }
         }
-
-        s.angle(i);
+        
+        
         s.draw(canvas).unwrap();
     })
     .unwrap();

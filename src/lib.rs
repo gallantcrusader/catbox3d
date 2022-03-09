@@ -122,6 +122,10 @@ impl Sprite {
     pub fn angle(&mut self, angle: f64) {
         self.angle = angle;
     }
+
+    pub fn position(&self) -> (i32, i32) {
+        self.rect.center().into()
+    }
 }
 
 pub struct Game {
