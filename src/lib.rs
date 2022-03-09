@@ -82,6 +82,7 @@ impl Iterator for Events {
 pub struct Sprite {
     rect: Rect,
     surf: Surface<'static>,
+    angle: f64,
 }
 
 impl Sprite {
@@ -95,6 +96,7 @@ impl Sprite {
         Ok(Self {
             rect: dest_rect,
             surf,
+            angle: 0.0,
         })
     }
 
@@ -104,7 +106,7 @@ impl Sprite {
 
         canvas.fill_rect(None)?;
         canvas.clear();
-        canvas.copy_ex(&text, None, self.rect, 0.0, None, false, false)?;
+        canvas.copy_ex(&text, None, self.rect, self.angle, None, false, false)?;
 
         Ok(())
     }
@@ -115,6 +117,10 @@ impl Sprite {
 
         self.rect.set_x(new_x);
         self.rect.set_y(new_y);
+    }
+
+    pub fn angle(&mut self, angle: f64) {
+        self.angle = angle;
     }
 }
 

@@ -3,8 +3,11 @@ use catbox::{Event, Game, Keycode, Sprite};
 fn main() {
     let game = Game::new("catbox demo", 1000, 800);
 
+    let mut i = 0.0;
     let mut s = Sprite::new("duck.png", 500, 400).unwrap();
     game.run(|canvas, event_pump| {
+        i = (i + 1.0) % 360.0;
+
         for event in event_pump {
             match event {
                 Event::Quit { .. }
@@ -28,6 +31,7 @@ fn main() {
             }
         }
 
+        s.angle(i);
         s.draw(canvas).unwrap();
     })
     .unwrap();
