@@ -14,7 +14,7 @@ fn main() {
         let y_diff = m.y() - start_y;
 
         let angle = (y_diff as f64).atan2(x_diff as f64);
-        s.angle(angle.to_degrees());
+        s.set_angle(angle.to_degrees());
 
         for event in event_pump {
             match event {
@@ -38,8 +38,7 @@ fn main() {
                 _ => {}
             }
         }
-        
-        
+
         s.draw(canvas).unwrap();
     })
     .unwrap();

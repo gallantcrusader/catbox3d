@@ -119,8 +119,12 @@ impl Sprite {
         self.rect.set_y(new_y);
     }
 
-    pub fn angle(&mut self, angle: f64) {
+    pub fn set_angle(&mut self, angle: f64) {
         self.angle = angle;
+    }
+
+    pub fn angle(&self) -> f64 {
+        self.angle
     }
 
     pub fn position(&self) -> (i32, i32) {
