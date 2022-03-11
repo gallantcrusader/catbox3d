@@ -1,3 +1,53 @@
+//! Work in progress game engine, inspired by [arcade](arcade.academy/).
+//! 
+//! ```
+//! use catbox::{Event, Game, Keycode, Sprite};
+//!
+//! fn main() {
+//!     let game = Game::new("catbox demo", 1000, 800);
+//! 
+//!     let mut i = 0.0;
+//!     let mut s = Sprite::new("duck.png", 500, 400).unwrap();
+//!     game.run(|canvas, event_pump| {
+//!         i = (i + 1.0) % 360.0;
+//! 
+//!         let (start_x, start_y) = s.position();
+//!         let m = sdl2::mouse::MouseState::new(event_pump.as_ref());
+//!         let x_diff = m.x() - start_x;
+//!         let y_diff = m.y() - start_y;
+//! 
+//!         let angle = (y_diff as f64).atan2(x_diff as f64);
+//!         s.set_angle(angle.to_degrees());
+//! 
+//!        for event in event_pump {
+//!             match event {
+//!                 Event::Quit { .. }
+//!                 | Event::KeyDown {
+//!                     keycode: Some(Keycode::Escape),
+//!                     ..
+//!                 } => game.terminate(),
+//! 
+//!                 Event::KeyDown { keycode, .. } => {
+//!                     let offset = match keycode.unwrap() {
+//!                         Keycode::W | Keycode::Up => (0, 5),
+//!                         Keycode::S | Keycode::Down => (0, -5),
+//!                         Keycode::A | Keycode::Left => (5, 0),
+//!                         Keycode::D | Keycode::Right => (-5, 0),
+//!                         _ => (0, 0),
+//!                     };
+//! 
+//!                     s.translate(offset);
+//!                 }
+//!                 _ => {}
+//!             }
+//!         }
+//! 
+//!         s.draw(canvas).unwrap();
+//!     })
+//!     .unwrap();
+//! }
+//! ```
+
 use std::{cell::Cell, path::Path};
 
 use sdl2::{
@@ -10,10 +60,16 @@ use sdl2::{
     EventPump, IntegerOrSdlError,
 };
 
+#[doc(no_inline)]
 pub use sdl2::event::Event;
+#[doc(no_inline)]
 pub use sdl2::keyboard::Keycode;
+#[doc(no_inline)]
 pub use sdl2::pixels::Color;
 
+/// Utility macro for cloning things into closures.
+///
+/// Temporary workaround for [Rust RFC 2407](https://github.com/rust-lang/rfcs/issues/2407)
 #[macro_export]
 macro_rules! cloned {
     ($thing:ident => $e:expr) => {
@@ -55,6 +111,7 @@ impl From<TextureValueError> for CatboxError {
 
 pub type Result<T> = std::result::Result<T, CatboxError>;
 
+/// Wrapper type around SDL's [EventPump](sdl2::EventPump). See those docs for more info.
 pub struct Events {
     pump: EventPump,
 }
@@ -79,6 +136,7 @@ impl Iterator for Events {
     }
 }
 
+/// Representation of a sprite.
 pub struct Sprite {
     rect: Rect,
     surf: Surface<'static>,
@@ -86,6 +144,13 @@ pub struct Sprite {
 }
 
 impl Sprite {
+    /// Create a new Sprite. The `path` is relative to the current directory while running.
+    ///
+    /// Don't forget to call [`Sprite::draw()`] after this.
+    /// ```
+    /// # use catbox::*;
+    /// let s = Sprite::new("duck.png", 500, 400).unwrap();
+    /// ```
     pub fn new<P: AsRef<Path>>(path: P, x: i32, y: i32) -> Result<Self> {
         let ops = RWops::from_file(path, "r")?;
         let surf = ops.load()?;
@@ -100,6 +165,16 @@ impl Sprite {
         })
     }
 
+    /// Draws the sprite to the window. This should only be called inside your main event loop.
+    ///
+    /// ```no_run
+    /// # use catbox::*;
+    /// # let mut s = Sprite::new("duck.png", 500, 400).unwrap();
+    /// # let game = Game::new("sprite demo", 1000, 1000);
+    /// # game.run(|canvas, _| {
+    /// s.draw(canvas);
+    /// # });
+    /// ```
     pub fn draw(&mut self, canvas: &mut Canvas<Window>) -> Result<()> {
         let creator = canvas.texture_creator();
         let text = creator.create_texture_from_surface(&self.surf)?;
@@ -111,6 +186,13 @@ impl Sprite {
         Ok(())
     }
 
+    /// Translate the sprite, in the form of (delta x, delta y)
+    ///
+    /// ```
+    /// # use catbox::*;
+    /// # let mut s = Sprite::new("duck.png", 500, 400).unwrap();
+    /// s.translate((5, 10));
+    /// ```
     pub fn translate(&mut self, position: (i32, i32)) {
         let new_x = self.rect.x() - position.0;
         let new_y = self.rect.y() - position.1;
@@ -119,27 +201,61 @@ impl Sprite {
         self.rect.set_y(new_y);
     }
 
+    /// Set the angle of the sprite, in degrees of clockwise rotation.
+    ///
+    /// ```
+    /// # use catbox::*;
+    /// # let mut s = Sprite::new("duck.png", 500, 400).unwrap();
+    /// s.set_angle(45.0);
+    /// ```
     pub fn set_angle(&mut self, angle: f64) {
         self.angle = angle;
     }
 
+    /// Get the angle of the sprite, in degrees of clockwise rotation.
+    ///
+    /// ```
+    /// # use catbox::*;
+    /// # let s = Sprite::new("duck.png", 500, 400).unwrap();
+    /// let angle = s.angle();
+    /// ```
     pub fn angle(&self) -> f64 {
         self.angle
     }
 
+    /// Get the x and y coordinates of the center of the sprite, in the form of (x, y).
+    ///
+    /// ```
+    /// # use catbox::*;
+    /// # let s = Sprite::new("duck.png", 500, 400).unwrap();
+    /// let (x, y) = s.position();
+    /// ```
     pub fn position(&self) -> (i32, i32) {
         self.rect.center().into()
     }
 }
 
+/// Representation of the game.
 pub struct Game {
+    /// The title that the window displays.
     pub title: String,
+    /// The width of the opened window
     pub width: u32,
+    /// The height of the opened window
     pub height: u32,
     stopped: Cell<bool>,
 }
 
 impl Game {
+    /// Creates a new Game struct.
+    ///
+    /// Make sure to use [`Self::run()`] to actually begin the game logic.
+    ///
+    /// ```
+    /// # use catbox::Game;
+    /// Game::new("cool game", 1000, 1000);
+    /// ```
+    ///
     pub fn new(title: &str, width: u32, height: u32) -> Self {
         Self {
             title: title.to_string(),
@@ -149,6 +265,15 @@ impl Game {
         }
     }
 
+    /// Runs the game. Note: this method blocks, as it uses an infinite loop.
+    ///
+    /// ```no_run
+    /// # use catbox::Game;
+    /// # let game = Game::new("Cool game", 1000, 1000);
+    /// game.run(|canvas, events| {
+    ///     // Game logic goes here
+    /// });
+    /// ```
     pub fn run<F: FnMut(&mut Canvas<Window>, &mut Events)>(&self, mut func: F) -> Result<()> {
         let sdl_context = sdl2::init()?;
         let video_subsystem = sdl_context.video()?;
@@ -177,6 +302,13 @@ impl Game {
         Ok(())
     }
 
+    /// Stops the game loop. This method should be called inside the closure that you passed to [`Self::run()`].
+    /// ```
+    /// # use catbox::Game;
+    /// # let game = Game::new("asjdhfkajlsdh", 0, 0);
+    /// // ... in the game loop:
+    /// game.terminate();
+    /// ```
     pub fn terminate(&self) {
         self.stopped.set(true);
     }
