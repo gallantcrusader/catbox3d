@@ -1,4 +1,4 @@
-use catbox::{Event, Game, Keycode, Sprite};
+use cat_box::{Event, Game, Keycode, Sprite};
 
 fn main() {
     let game = Game::new("catbox demo", 1000, 800);

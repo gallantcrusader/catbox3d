@@ -1,12 +1,12 @@
-# catbox
+# cat-box
 
 Work in progress game engine, inspired by [arcade](arcade.academy/).
 
 ```rs
-use catbox::{Event, Game, Keycode, Sprite};
+use cat_box::{Event, Game, Keycode, Sprite};
 
 fn main() {
-    let game = Game::new("catbox demo", 1000, 800);
+    let game = Game::new("cat-box demo", 1000, 800);
 
     let mut i = 0.0;
     let mut s = Sprite::new("duck.png", 500, 400).unwrap();

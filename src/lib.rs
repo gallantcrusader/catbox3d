@@ -1,24 +1,24 @@
 //! Work in progress game engine, inspired by [arcade](arcade.academy/).
-//! 
-//! ```
-//! use catbox::{Event, Game, Keycode, Sprite};
+//!
+//! ```no_run
+//! use cat_box::{Event, Game, Keycode, Sprite};
 //!
 //! fn main() {
-//!     let game = Game::new("catbox demo", 1000, 800);
-//! 
+//!     let game = Game::new("cat_box demo", 1000, 800);
+//!
 //!     let mut i = 0.0;
 //!     let mut s = Sprite::new("duck.png", 500, 400).unwrap();
 //!     game.run(|canvas, event_pump| {
 //!         i = (i + 1.0) % 360.0;
-//! 
+//!
 //!         let (start_x, start_y) = s.position();
 //!         let m = sdl2::mouse::MouseState::new(event_pump.as_ref());
 //!         let x_diff = m.x() - start_x;
 //!         let y_diff = m.y() - start_y;
-//! 
+//!
 //!         let angle = (y_diff as f64).atan2(x_diff as f64);
 //!         s.set_angle(angle.to_degrees());
-//! 
+//!
 //!        for event in event_pump {
 //!             match event {
 //!                 Event::Quit { .. }
@@ -26,7 +26,7 @@
 //!                     keycode: Some(Keycode::Escape),
 //!                     ..
 //!                 } => game.terminate(),
-//! 
+//!
 //!                 Event::KeyDown { keycode, .. } => {
 //!                     let offset = match keycode.unwrap() {
 //!                         Keycode::W | Keycode::Up => (0, 5),
@@ -35,13 +35,13 @@
 //!                         Keycode::D | Keycode::Right => (-5, 0),
 //!                         _ => (0, 0),
 //!                     };
-//! 
+//!
 //!                     s.translate(offset);
 //!                 }
 //!                 _ => {}
 //!             }
 //!         }
-//! 
+//!
 //!         s.draw(canvas).unwrap();
 //!     })
 //!     .unwrap();
@@ -148,7 +148,7 @@ impl Sprite {
     ///
     /// Don't forget to call [`Sprite::draw()`] after this.
     /// ```
-    /// # use catbox::*;
+    /// # use cat_box::*;
     /// let s = Sprite::new("duck.png", 500, 400).unwrap();
     /// ```
     pub fn new<P: AsRef<Path>>(path: P, x: i32, y: i32) -> Result<Self> {
@@ -168,7 +168,7 @@ impl Sprite {
     /// Draws the sprite to the window. This should only be called inside your main event loop.
     ///
     /// ```no_run
-    /// # use catbox::*;
+    /// # use cat_box::*;
     /// # let mut s = Sprite::new("duck.png", 500, 400).unwrap();
     /// # let game = Game::new("sprite demo", 1000, 1000);
     /// # game.run(|canvas, _| {
@@ -189,7 +189,7 @@ impl Sprite {
     /// Translate the sprite, in the form of (delta x, delta y)
     ///
     /// ```
-    /// # use catbox::*;
+    /// # use cat_box::*;
     /// # let mut s = Sprite::new("duck.png", 500, 400).unwrap();
     /// s.translate((5, 10));
     /// ```
@@ -204,7 +204,7 @@ impl Sprite {
     /// Set the angle of the sprite, in degrees of clockwise rotation.
     ///
     /// ```
-    /// # use catbox::*;
+    /// # use cat_box::*;
     /// # let mut s = Sprite::new("duck.png", 500, 400).unwrap();
     /// s.set_angle(45.0);
     /// ```
@@ -215,7 +215,7 @@ impl Sprite {
     /// Get the angle of the sprite, in degrees of clockwise rotation.
     ///
     /// ```
-    /// # use catbox::*;
+    /// # use cat_box::*;
     /// # let s = Sprite::new("duck.png", 500, 400).unwrap();
     /// let angle = s.angle();
     /// ```
@@ -226,7 +226,7 @@ impl Sprite {
     /// Get the x and y coordinates of the center of the sprite, in the form of (x, y).
     ///
     /// ```
-    /// # use catbox::*;
+    /// # use cat_box::*;
     /// # let s = Sprite::new("duck.png", 500, 400).unwrap();
     /// let (x, y) = s.position();
     /// ```
@@ -252,7 +252,7 @@ impl Game {
     /// Make sure to use [`Self::run()`] to actually begin the game logic.
     ///
     /// ```
-    /// # use catbox::Game;
+    /// # use cat_box::Game;
     /// Game::new("cool game", 1000, 1000);
     /// ```
     ///
@@ -268,7 +268,7 @@ impl Game {
     /// Runs the game. Note: this method blocks, as it uses an infinite loop.
     ///
     /// ```no_run
-    /// # use catbox::Game;
+    /// # use cat_box::Game;
     /// # let game = Game::new("Cool game", 1000, 1000);
     /// game.run(|canvas, events| {
     ///     // Game logic goes here
@@ -304,7 +304,7 @@ impl Game {
 
     /// Stops the game loop. This method should be called inside the closure that you passed to [`Self::run()`].
     /// ```
-    /// # use catbox::Game;
+    /// # use cat_box::Game;
     /// # let game = Game::new("asjdhfkajlsdh", 0, 0);
     /// // ... in the game loop:
     /// game.terminate();
