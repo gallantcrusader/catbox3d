@@ -5,7 +5,7 @@ fn main() {
 
     let mut i = 0.0;
     let mut s = Sprite::new("duck.png", 500, 400).unwrap();
-    game.run(|canvas, event_pump| {
+    game.run(|ctx, event_pump| {
         i = (i + 1.0) % 360.0;
 
         let (start_x, start_y) = s.position();
@@ -39,7 +39,7 @@ fn main() {
             }
         }
 
-        s.draw(canvas).unwrap();
+        s.draw(ctx).unwrap();
     })
     .unwrap();
 }

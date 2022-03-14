@@ -53,10 +53,10 @@ use std::{cell::Cell, path::Path};
 use sdl2::{
     image::ImageRWops,
     rect::Rect,
-    render::{Canvas, TextureValueError},
+    render::{Canvas, TextureValueError, TextureCreator},
     rwops::RWops,
     surface::Surface,
-    video::{Window, WindowBuildError},
+    video::{Window, WindowBuildError, WindowContext},
     EventPump, IntegerOrSdlError,
 };
 
@@ -175,8 +175,8 @@ impl Sprite {
     /// s.draw(canvas);
     /// # });
     /// ```
-    pub fn draw(&mut self, canvas: &mut Canvas<Window>) -> Result<()> {
-        let creator = canvas.texture_creator();
+    pub fn draw(&mut self, ctx: &mut Context) -> Result<()> {
+        let (creator, canvas) = ctx.inner();
         let text = creator.create_texture_from_surface(&self.surf)?;
 
         canvas.fill_rect(None)?;
@@ -235,6 +235,33 @@ impl Sprite {
     }
 }
 
+pub struct Context {
+    canvas: Canvas<Window>,
+    texture_creator: TextureCreator<WindowContext>,
+}
+
+impl Context {
+    pub fn new(canvas: Canvas<Window>) -> Self {
+        let creator = canvas.texture_creator();
+        Self {
+            canvas,
+            texture_creator: creator,
+        }
+    }
+
+    pub fn canvas(&mut self) -> &mut Canvas<Window> {
+        &mut self.canvas
+    }
+
+    pub fn inner(&mut self) -> (&TextureCreator<WindowContext>, &mut Canvas<Window>) {
+        (&self.texture_creator, &mut self.canvas)
+    }
+
+    pub fn update(&mut self) {
+        self.canvas.present();
+    }
+}
+
 /// Representation of the game.
 pub struct Game {
     /// The title that the window displays.
@@ -274,7 +301,7 @@ impl Game {
     ///     // Game logic goes here
     /// });
     /// ```
-    pub fn run<F: FnMut(&mut Canvas<Window>, &mut Events)>(&self, mut func: F) -> Result<()> {
+    pub fn run<F: FnMut(&mut Context, &mut Events)>(&self, mut func: F) -> Result<()> {
         let sdl_context = sdl2::init()?;
         let video_subsystem = sdl_context.video()?;
 
@@ -285,18 +312,20 @@ impl Game {
             .vulkan()
             .build()?;
 
-        let mut canvas = window.into_canvas().build()?;
+        let canvas = window.into_canvas().build()?;
 
         let event_pump = sdl_context.event_pump()?;
 
         let mut events = Events { pump: event_pump };
 
+        let mut ctx = Context::new(canvas);
+
         loop {
             if self.stopped.get() {
                 break;
             }
-            func(&mut canvas, &mut events);
-            canvas.present();
+            func(&mut ctx, &mut events);
+            ctx.update();
         }
 
         Ok(())
