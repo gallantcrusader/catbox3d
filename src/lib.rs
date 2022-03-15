@@ -179,8 +179,6 @@ impl Sprite {
         let (creator, canvas) = ctx.inner();
         let text = creator.create_texture_from_surface(&self.surf)?;
 
-        canvas.fill_rect(None)?;
-        canvas.clear();
         canvas.copy_ex(&text, None, self.rect, self.angle, None, false, false)?;
 
         Ok(())
@@ -241,7 +239,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(canvas: Canvas<Window>) -> Self {
+    fn new(canvas: Canvas<Window>) -> Self {
         let creator = canvas.texture_creator();
         Self {
             canvas,
@@ -249,16 +247,16 @@ impl Context {
         }
     }
 
-    pub fn canvas(&mut self) -> &mut Canvas<Window> {
-        &mut self.canvas
-    }
-
     pub fn inner(&mut self) -> (&TextureCreator<WindowContext>, &mut Canvas<Window>) {
         (&self.texture_creator, &mut self.canvas)
     }
 
-    pub fn update(&mut self) {
+    fn update(&mut self) {
         self.canvas.present();
+    }
+
+    fn clear(&mut self) {
+        self.canvas.clear();
     }
 }
 
@@ -324,6 +322,7 @@ impl Game {
             if self.stopped.get() {
                 break;
             }
+            ctx.clear();
             func(&mut ctx, &mut events);
             ctx.update();
         }
