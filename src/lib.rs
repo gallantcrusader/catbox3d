@@ -235,7 +235,7 @@ impl Sprite {
 
 /// Game context.
 ///
-/// This should never actually be used; instead, just pass it around to the various cat-box functions such as [`Sprite::draw()`].
+/// In most cases, this should never actually be used; instead, just pass it around to the various cat-box functions such as [`Sprite::draw()`].
 pub struct Context {
     canvas: Canvas<Window>,
     texture_creator: TextureCreator<WindowContext>,
@@ -263,6 +263,11 @@ impl Context {
 
     fn clear(&mut self) {
         self.canvas.clear();
+    }
+
+    /// Set the background colour. See [`Canvas::set_draw_color()`](sdl2::render::Canvas::set_draw_color()) for more info.
+    pub fn set_background_colour(&mut self, r: u8, g: u8, b: u8) {
+        self.canvas.set_draw_color(Color::RGB(r, g, b));
     }
 }
 
