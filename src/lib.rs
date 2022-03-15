@@ -8,7 +8,7 @@
 //!
 //!     let mut i = 0.0;
 //!     let mut s = Sprite::new("duck.png", 500, 400).unwrap();
-//!     game.run(|canvas, event_pump| {
+//!     game.run(|ctx, event_pump| {
 //!         i = (i + 1.0) % 360.0;
 //!
 //!         let (start_x, start_y) = s.position();
@@ -31,8 +31,8 @@
 //!                     let offset = match keycode.unwrap() {
 //!                         Keycode::W | Keycode::Up => (0, 5),
 //!                         Keycode::S | Keycode::Down => (0, -5),
-//!                         Keycode::A | Keycode::Left => (5, 0),
-//!                         Keycode::D | Keycode::Right => (-5, 0),
+//!                         Keycode::A | Keycode::Left => (-5, 0),
+//!                         Keycode::D | Keycode::Right => (5, 0),
 //!                         _ => (0, 0),
 //!                     };
 //!
@@ -42,7 +42,7 @@
 //!             }
 //!         }
 //!
-//!         s.draw(canvas).unwrap();
+//!         s.draw(ctx).unwrap();
 //!     })
 //!     .unwrap();
 //! }
@@ -53,7 +53,7 @@ use std::{cell::Cell, path::Path};
 use sdl2::{
     image::ImageRWops,
     rect::Rect,
-    render::{Canvas, TextureValueError, TextureCreator},
+    render::{Canvas, TextureCreator, TextureValueError},
     rwops::RWops,
     surface::Surface,
     video::{Window, WindowBuildError, WindowContext},
@@ -111,7 +111,7 @@ impl From<TextureValueError> for CatboxError {
 
 pub type Result<T> = std::result::Result<T, CatboxError>;
 
-/// Wrapper type around SDL's [EventPump](sdl2::EventPump). See those docs for more info.
+/// Wrapper type around SDL's [`EventPump`](sdl2::EventPump). See those docs for more info.
 pub struct Events {
     pump: EventPump,
 }
@@ -146,7 +146,7 @@ pub struct Sprite {
 impl Sprite {
     /// Create a new Sprite. The `path` is relative to the current directory while running.
     ///
-    /// Don't forget to call [`Sprite::draw()`] after this.
+    /// Don't forget to call [`draw()`](Self::draw()) after this.
     /// ```
     /// # use cat_box::*;
     /// let s = Sprite::new("duck.png", 500, 400).unwrap();
@@ -171,8 +171,8 @@ impl Sprite {
     /// # use cat_box::*;
     /// # let mut s = Sprite::new("duck.png", 500, 400).unwrap();
     /// # let game = Game::new("sprite demo", 1000, 1000);
-    /// # game.run(|canvas, _| {
-    /// s.draw(canvas);
+    /// # game.run(|ctx, _| {
+    /// s.draw(ctx);
     /// # });
     /// ```
     pub fn draw(&mut self, ctx: &mut Context) -> Result<()> {
@@ -192,7 +192,7 @@ impl Sprite {
     /// s.translate((5, 10));
     /// ```
     pub fn translate(&mut self, position: (i32, i32)) {
-        let new_x = self.rect.x() - position.0;
+        let new_x = self.rect.x() + position.0;
         let new_y = self.rect.y() - position.1;
 
         self.rect.set_x(new_x);
@@ -233,6 +233,9 @@ impl Sprite {
     }
 }
 
+/// Game context.
+///
+/// This should never actually be used; instead, just pass it around to the various cat-box functions such as [`Sprite::draw()`].
 pub struct Context {
     canvas: Canvas<Window>,
     texture_creator: TextureCreator<WindowContext>,
@@ -247,6 +250,9 @@ impl Context {
         }
     }
 
+    /// Get the inner [`Canvas`](sdl2::render::Canvas) and [`TextureCreator`](sdl2::render::TextureCreator).
+    ///
+    /// Only use this method if you know what you're doing.
     pub fn inner(&mut self) -> (&TextureCreator<WindowContext>, &mut Canvas<Window>) {
         (&self.texture_creator, &mut self.canvas)
     }
@@ -295,7 +301,7 @@ impl Game {
     /// ```no_run
     /// # use cat_box::Game;
     /// # let game = Game::new("Cool game", 1000, 1000);
-    /// game.run(|canvas, events| {
+    /// game.run(|ctx, events| {
     ///     // Game logic goes here
     /// });
     /// ```

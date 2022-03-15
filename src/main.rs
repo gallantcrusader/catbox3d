@@ -29,8 +29,8 @@ fn main() {
                     let offset = match keycode.unwrap() {
                         Keycode::W | Keycode::Up => (0, 5),
                         Keycode::S | Keycode::Down => (0, -5),
-                        Keycode::A | Keycode::Left => (5, 0),
-                        Keycode::D | Keycode::Right => (-5, 0),
+                        Keycode::A | Keycode::Left => (-5, 0),
+                        Keycode::D | Keycode::Right => (5, 0),
                         _ => (0, 0),
                     };
 
