@@ -1,6 +1,6 @@
 [package]
 name = "cat-box"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2018"
 license = "MIT"
 description = "Work in progress game engine, inspired by arcade"
