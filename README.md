@@ -12,6 +12,7 @@ fn main() {
     let mut s = Sprite::new("duck.png", 500, 400).unwrap();
     game.run(|ctx, event_pump| {
         i = (i + 1.0) % 360.0;
+        ctx.set_background_colour(i as u8, 64, 255);
 
         let (start_x, start_y) = s.position();
         let m = sdl2::mouse::MouseState::new(event_pump.as_ref());
