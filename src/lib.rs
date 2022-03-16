@@ -56,8 +56,9 @@ use sdl2::{
     render::{Canvas, TextureCreator, TextureValueError},
     rwops::RWops,
     surface::Surface,
+    ttf::{FontError, Sdl2TtfContext},
     video::{Window, WindowBuildError, WindowContext},
-    EventPump, IntegerOrSdlError, ttf::{Sdl2TtfContext, FontError},
+    EventPump, IntegerOrSdlError,
 };
 
 #[doc(no_inline)]
@@ -245,7 +246,7 @@ impl Sprite {
 pub struct Context {
     canvas: Canvas<Window>,
     texture_creator: TextureCreator<WindowContext>,
-    ttf_subsystem: Sdl2TtfContext
+    ttf_subsystem: Sdl2TtfContext,
 }
 
 impl Context {
@@ -254,7 +255,7 @@ impl Context {
         Self {
             canvas,
             texture_creator: creator,
-            ttf_subsystem
+            ttf_subsystem,
         }
     }
 
@@ -282,26 +283,24 @@ impl Context {
 /// Set the mode for drawing text.
 pub enum TextMode {
     /// Render the text transparently.
-    Transparent {
-        colour: (u8, u8, u8)
-    },
+    Transparent { colour: (u8, u8, u8) },
     /// Render the text with a foreground and a background colour.
-    /// 
+    ///
     /// This creates a box around the text.
     Shaded {
         foreground: (u8, u8, u8),
-        background: (u8, u8, u8)
-    }
+        background: (u8, u8, u8),
+    },
 }
 
 /// Draw text to the screen.
-/// 
+///
 /// This loads a font from the current directory, case sensitive.
-/// 
+///
 /// `pos` refers to the *center* of the rendered text.
-/// 
+///
 /// Refer to [`TextMode`] for information about colouring.
-/// 
+///
 /// ``` no_run
 /// # use cat_box::*;
 /// # let game = Game::new("", 100, 100);
@@ -312,13 +311,23 @@ pub enum TextMode {
 /// };
 /// draw_text(ctx, "text to draw", "arial.ttf", 72, (300, 300), mode);
 /// # });
-pub fn draw_text<S: AsRef<str>>(ctx: &mut Context, text: S, font: &str, size: u16, pos: (i32, i32), mode: TextMode) -> Result<()> {
-    let font =  ctx.ttf_subsystem.load_font(font, size)?;
+pub fn draw_text<S: AsRef<str>>(
+    ctx: &mut Context,
+    text: S,
+    font: &str,
+    size: u16,
+    pos: (i32, i32),
+    mode: TextMode,
+) -> Result<()> {
+    let font = ctx.ttf_subsystem.load_font(font, size)?;
     let renderer = font.render(text.as_ref());
 
     let surf = match mode {
         TextMode::Transparent { colour: (r, g, b) } => renderer.solid(Color::RGB(r, g, b)),
-        TextMode::Shaded { foreground: (fr, fg, fb), background: (br, bg, bb) } => renderer.shaded(Color::RGB(fr, fg, fb), Color::RGB(br, bg, bb)),
+        TextMode::Shaded {
+            foreground: (fr, fg, fb),
+            background: (br, bg, bb),
+        } => renderer.shaded(Color::RGB(fr, fg, fb), Color::RGB(br, bg, bb)),
     }?;
 
     drop(font);
