@@ -10,7 +10,7 @@ fn main() {
 
     let mut i = 0.0;
     let mut s = Sprite::new("duck.png", 500, 400).unwrap();
-    game.run(|canvas, event_pump| {
+    game.run(|ctx, event_pump| {
         i = (i + 1.0) % 360.0;
 
         let (start_x, start_y) = s.position();
@@ -33,8 +33,8 @@ fn main() {
                     let offset = match keycode.unwrap() {
                         Keycode::W | Keycode::Up => (0, 5),
                         Keycode::S | Keycode::Down => (0, -5),
-                        Keycode::A | Keycode::Left => (5, 0),
-                        Keycode::D | Keycode::Right => (-5, 0),
+                        Keycode::A | Keycode::Left => (-5, 0),
+                        Keycode::D | Keycode::Right => (5, 0),
                         _ => (0, 0),
                     };
 
@@ -44,7 +44,7 @@ fn main() {
             }
         }
 
-        s.draw(canvas).unwrap();
+        s.draw(ctx).unwrap();
     })
     .unwrap();
 }

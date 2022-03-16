@@ -57,7 +57,7 @@ use sdl2::{
     rwops::RWops,
     surface::Surface,
     video::{Window, WindowBuildError, WindowContext},
-    EventPump, IntegerOrSdlError, ttf::{Sdl2TtfContext, Font, FontError},
+    EventPump, IntegerOrSdlError, ttf::{Sdl2TtfContext, FontError},
 };
 
 #[doc(no_inline)]
@@ -239,16 +239,6 @@ impl Sprite {
     }
 }
 
-pub enum TextMode {
-    Transparent {
-        colour: (u8, u8, u8)
-    },
-    Shaded {
-        foreground: (u8, u8, u8),
-        background: (u8, u8, u8)
-    }
-}
-
 /// Game context.
 ///
 /// In most cases, this should never actually be used; instead, just pass it around to the various cat-box functions such as [`Sprite::draw()`].
@@ -289,6 +279,39 @@ impl Context {
     }
 }
 
+/// Set the mode for drawing text.
+pub enum TextMode {
+    /// Render the text transparently.
+    Transparent {
+        colour: (u8, u8, u8)
+    },
+    /// Render the text with a foreground and a background colour.
+    /// 
+    /// This creates a box around the text.
+    Shaded {
+        foreground: (u8, u8, u8),
+        background: (u8, u8, u8)
+    }
+}
+
+/// Draw text to the screen.
+/// 
+/// This loads a font from the current directory, case sensitive.
+/// 
+/// `pos` refers to the *center* of the rendered text.
+/// 
+/// Refer to [`TextMode`] for information about colouring.
+/// 
+/// ``` no_run
+/// # use cat_box::*;
+/// # let game = Game::new("", 100, 100);
+/// # game.run(|ctx, _| {
+/// let mode = TextMode::Shaded {
+///     foreground: (255, 255, 255),
+///     background: (0, 0, 0)
+/// };
+/// draw_text(ctx, "text to draw", "arial.ttf", 72, (300, 300), mode);
+/// # });
 pub fn draw_text<S: AsRef<str>>(ctx: &mut Context, text: S, font: &str, size: u16, pos: (i32, i32), mode: TextMode) -> Result<()> {
     let font =  ctx.ttf_subsystem.load_font(font, size)?;
     let renderer = font.render(text.as_ref());
