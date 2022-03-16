@@ -289,9 +289,9 @@ impl Context {
     }
 }
 
-pub fn draw_text(ctx: &mut Context, text: &str, font: &str, size: u16, pos: (i32, i32), mode: TextMode) -> Result<()> {
+pub fn draw_text<S: AsRef<str>>(ctx: &mut Context, text: S, font: &str, size: u16, pos: (i32, i32), mode: TextMode) -> Result<()> {
     let font =  ctx.ttf_subsystem.load_font(font, size)?;
-    let renderer = font.render(text);
+    let renderer = font.render(text.as_ref());
 
     let surf = match mode {
         TextMode::Transparent { colour: (r, g, b) } => renderer.solid(Color::RGB(r, g, b)),

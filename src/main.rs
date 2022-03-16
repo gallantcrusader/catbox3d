@@ -10,7 +10,7 @@ fn main() {
         i = (i + 1.0) % 360.0;
         ctx.set_background_colour(i as u8, 64, 255);
 
-        draw_text(ctx, "this is a test", "cozette_bitmap.ttf", 65535, (300, 300), cat_box::TextMode::Shaded {foreground: (255, 255, 255), background: (0, 0, 0)}).unwrap();
+        draw_text(ctx, format!("i is {}", i), "MesloLGS NF Regular.ttf", 72, (300, 300), cat_box::TextMode::Shaded {foreground: (255, 255, 255), background: (0, 0, 0)}).unwrap();
 
         let (start_x, start_y) = s.position();
         let m = sdl2::mouse::MouseState::new(event_pump.as_ref());
