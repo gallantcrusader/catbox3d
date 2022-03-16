@@ -12,4 +12,4 @@ exclude = ["src/main.rs"]
 
 [dependencies.sdl2]
 version = "0.35.2"
-features = ["image"]
+features = ["image", "ttf"]

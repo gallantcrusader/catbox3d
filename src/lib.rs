@@ -57,7 +57,7 @@ use sdl2::{
     rwops::RWops,
     surface::Surface,
     video::{Window, WindowBuildError, WindowContext},
-    EventPump, IntegerOrSdlError,
+    EventPump, IntegerOrSdlError, ttf::{Sdl2TtfContext, Font, FontError},
 };
 
 #[doc(no_inline)]
@@ -105,6 +105,12 @@ impl From<IntegerOrSdlError> for CatboxError {
 
 impl From<TextureValueError> for CatboxError {
     fn from(e: TextureValueError) -> Self {
+        CatboxError(format!("{}", e))
+    }
+}
+
+impl From<FontError> for CatboxError {
+    fn from(e: FontError) -> Self {
         CatboxError(format!("{}", e))
     }
 }
@@ -233,20 +239,32 @@ impl Sprite {
     }
 }
 
+pub enum TextMode {
+    Transparent {
+        colour: (u8, u8, u8)
+    },
+    Shaded {
+        foreground: (u8, u8, u8),
+        background: (u8, u8, u8)
+    }
+}
+
 /// Game context.
 ///
 /// In most cases, this should never actually be used; instead, just pass it around to the various cat-box functions such as [`Sprite::draw()`].
 pub struct Context {
     canvas: Canvas<Window>,
     texture_creator: TextureCreator<WindowContext>,
+    ttf_subsystem: Sdl2TtfContext
 }
 
 impl Context {
-    fn new(canvas: Canvas<Window>) -> Self {
+    fn new(canvas: Canvas<Window>, ttf_subsystem: Sdl2TtfContext) -> Self {
         let creator = canvas.texture_creator();
         Self {
             canvas,
             texture_creator: creator,
+            ttf_subsystem
         }
     }
 
@@ -269,6 +287,27 @@ impl Context {
     pub fn set_background_colour(&mut self, r: u8, g: u8, b: u8) {
         self.canvas.set_draw_color(Color::RGB(r, g, b));
     }
+}
+
+pub fn draw_text(ctx: &mut Context, text: &str, font: &str, size: u16, pos: (i32, i32), mode: TextMode) -> Result<()> {
+    let font =  ctx.ttf_subsystem.load_font(font, size)?;
+    let renderer = font.render(text);
+
+    let surf = match mode {
+        TextMode::Transparent { colour: (r, g, b) } => renderer.solid(Color::RGB(r, g, b)),
+        TextMode::Shaded { foreground: (fr, fg, fb), background: (br, bg, bb) } => renderer.shaded(Color::RGB(fr, fg, fb), Color::RGB(br, bg, bb)),
+    }?;
+
+    drop(font);
+    let (creator, canvas) = ctx.inner();
+    let texture = creator.create_texture_from_surface(&surf)?;
+
+    let srect = surf.rect();
+    let dest_rect: Rect = Rect::from_center(pos, srect.width(), srect.height());
+
+    canvas.copy_ex(&texture, None, dest_rect, 0.0, None, false, false)?;
+
+    Ok(())
 }
 
 /// Representation of the game.
@@ -322,12 +361,13 @@ impl Game {
             .build()?;
 
         let canvas = window.into_canvas().build()?;
+        let s = sdl2::ttf::init().unwrap();
 
         let event_pump = sdl_context.event_pump()?;
 
         let mut events = Events { pump: event_pump };
 
-        let mut ctx = Context::new(canvas);
+        let mut ctx = Context::new(canvas, s);
 
         loop {
             if self.stopped.get() {
