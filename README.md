@@ -1,6 +1,6 @@
 # cat-box
 
-Work in progress game engine, inspired by [arcade](arcade.academy/).
+Work in progress game engine, inspired by [arcade](https://arcade.academy/).
 
 ```rs
 use cat_box::{Event, Game, Keycode, Sprite};
@@ -8,10 +8,10 @@ use cat_box::{Event, Game, Keycode, Sprite};
 fn main() {
     let game = Game::new("cat-box demo", 1000, 800);
 
-    let mut i = 0.0;
+    let mut i = 0u8;
     let mut s = Sprite::new("duck.png", 500, 400).unwrap();
     game.run(|ctx, event_pump| {
-        i = (i + 1.0) % 360.0;
+        i = (i + 1) % 255;
         ctx.set_background_colour(i as u8, 64, 255);
 
         let (start_x, start_y) = s.position();

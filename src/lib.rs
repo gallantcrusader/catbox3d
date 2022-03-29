@@ -1,4 +1,4 @@
-//! Work in progress game engine, inspired by [arcade](arcade.academy/).
+//! Work in progress game engine, inspired by [arcade](https://arcade.academy/).
 //!
 //! ```no_run
 //! use cat_box::{Event, Game, Keycode, Sprite};
@@ -6,10 +6,10 @@
 //! fn main() {
 //!     let game = Game::new("cat_box demo", 1000, 800);
 //!
-//!     let mut i = 0.0;
+//!     let mut i = 0;
 //!     let mut s = Sprite::new("duck.png", 500, 400).unwrap();
 //!     game.run(|ctx, event_pump| {
-//!         i = (i + 1.0) % 360.0;
+//!         i = (i + 1) % 255;
 //!         ctx.set_background_colour(i as u8, 64, 255);
 //!
 //!         let (start_x, start_y) = s.position();
@@ -241,23 +241,51 @@ impl Sprite {
     }
 }
 
+/// Manages a collection of [`Sprite`]s. 
+/// 
+/// Technically, this is a thin wrapper around a simple [`Vec`] of sprites,
+/// although with some convenience methods.
 pub struct SpriteCollection {
     v: Vec<Sprite>,
 }
 
 impl SpriteCollection {
+    /// Creates a new [`SpriteCollection`].
+    /// 
+    /// See [`Vec::new()`] for more information.
+    /// ```
+    /// # use cat_box::*;
+    /// let sprites = SpriteCollection::new();
+    /// ```
     pub fn new() -> Self {
         Self {
             v: Vec::new()
         }
     }
 
+    /// Creates a new [`SpriteCollection`] with the specified capacity.
+    /// 
+    /// The collection will be able to hold exactly `capacity` items without reallocating.
+    /// ```
+    /// # use cat_box::*;
+    /// let sprites = SpriteCollection::with_capacity(10);
+    /// ```
     pub fn with_capacity(cap: usize) -> Self {
         Self {
             v: Vec::with_capacity(cap)
         }
     }
 
+    /// Draw all the sprites in this collection to the window.
+    /// This should only be called inside the main event loop.
+    /// ```no_run
+    /// # use cat_box::*;
+    /// # let mut sprites = SpriteCollection::new();
+    /// # let mut game = Game::new("asjdfhalksjdf", 1, 1);
+    /// # game.run(|ctx, _| {
+    /// sprites.draw(ctx);
+    /// # }); 
+    /// ```
     pub fn draw(&mut self, ctx: &mut Context) -> Result<()> {
         for s in self.v.iter_mut() {
             s.draw(ctx)?;
@@ -266,38 +294,99 @@ impl SpriteCollection {
         Ok(())
     }
     
+    /// Add a new [`Sprite`] to the end of this collection.
+    /// ```
+    /// # use cat_box::*;
+    /// let mut sprites = SpriteCollection::new();
+    /// let s = Sprite::new("duck.png", 500, 400).unwrap();
+    /// sprites.push(s);
+    /// ```
     pub fn push(&mut self, s: Sprite) {
         self.v.push(s); 
     }
 
+    /// Inserts an element at position `index` within the collection.
+    /// Shifts all elements after it to the right.
+    /// ```
+    /// # use cat_box::*;
+    /// let mut sprites = SpriteCollection::new();
+    /// let s = Sprite::new("duck.png", 500, 400).unwrap();
+    /// sprites.insert(s, 0);
+    /// ```
     pub fn insert(&mut self, s: Sprite, index: usize) {
         self.v.insert(index, s);
     }
     
+    /// Removes and returns the last element, or `None` if the collection is empty.
+    /// ```
+    /// # use cat_box::*;
+    /// let mut sprites = SpriteCollection::new();
+    /// let s = sprites.pop();
+    /// ```
     pub fn pop(&mut self) -> Option<Sprite> {
         self.v.pop()
     }
 
+    /// Removes and returns the element at `index`.
+    /// Shifts all elements after it to the left.
+    /// This method will panic if the index is out of bounds.
+    /// ```
+    /// # use cat_box::*;
+    /// let mut sprites = SpriteCollection::new();
+    /// # let s = Sprite::new("duck.png", 500, 400).unwrap();
+    /// # sprites.push(s);
+    /// sprites.remove(0);
+    /// ```
     pub fn remove(&mut self, index: usize) -> Sprite {
         self.v.remove(index)
     }
 
+    /// Return an iterator over the sprites in this collection.
+    /// Use this to modify the sprites themselves, for example to set their position or angle.
     pub fn iter(&mut self) -> IterMut<'_, Sprite> {
         self.v.iter_mut()
     }
 
+    /// Clears the collection, without touching the allocated capacity.
+    /// ```
+    /// # use cat_box::*;
+    /// let mut sprites = SpriteCollection::new();
+    /// # let s = Sprite::new("duck.png", 500, 400).unwrap();
+    /// # sprites.push(s);
+    /// sprites.clear();
+    /// ```
     pub fn clear(&mut self) {
         self.v.clear();
     }
 
+    /// Move all the elements of `other` into `Self`.
+    /// ```
+    /// # use cat_box::*;
+    /// let mut sprites = SpriteCollection::new();
+    /// let mut sprites2 = SpriteCollection::new();
+    /// # let s = Sprite::new("duck.png", 500, 400).unwrap();
+    /// # let s2 = Sprite::new("duck.png", 400, 500).unwrap();
+    /// # sprites.push(s);
+    /// # sprites2.push(s2);
+    /// sprites.concat(sprites2);
+    /// ```
     pub fn concat(&mut self, mut other: SpriteCollection) {
         self.v.append(&mut *other);
     }
 
+    /// Returns the length of this vector.
     pub fn len(&self) -> usize {
         self.v.len()
     }
 
+    /// Get a reference to the element at `index`, or `None` if it doesn't exist.
+    /// ```
+    /// # use cat_box::*;
+    /// let mut sprites = SpriteCollection::new();
+    /// # let s = Sprite::new("duck.png", 500, 400).unwrap();
+    /// # sprites.push(s);
+    /// let s = sprites.get(0);
+    /// ```
     pub fn get(&self, index: usize) -> Option<&Sprite> {
         self.v.get(index)
     }
