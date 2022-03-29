@@ -49,7 +49,7 @@
 //! }
 //! ```
 
-use std::{cell::Cell, path::Path, ops::{DerefMut, Deref}};
+use std::{cell::Cell, path::Path, ops::{DerefMut, Deref}, slice::IterMut};
 
 use sdl2::{
     image::ImageRWops,
@@ -264,6 +264,42 @@ impl SpriteCollection {
         }
 
         Ok(())
+    }
+    
+    pub fn push(&mut self, s: Sprite) {
+        self.v.push(s); 
+    }
+
+    pub fn insert(&mut self, s: Sprite, index: usize) {
+        self.v.insert(index, s);
+    }
+    
+    pub fn pop(&mut self) -> Option<Sprite> {
+        self.v.pop()
+    }
+
+    pub fn remove(&mut self, index: usize) -> Sprite {
+        self.v.remove(index)
+    }
+
+    pub fn iter(&mut self) -> IterMut<'_, Sprite> {
+        self.v.iter_mut()
+    }
+
+    pub fn clear(&mut self) {
+        self.v.clear();
+    }
+
+    pub fn concat(&mut self, mut other: SpriteCollection) {
+        self.v.append(&mut *other);
+    }
+
+    pub fn len(&self) -> usize {
+        self.v.len()
+    }
+
+    pub fn get(&self, index: usize) -> Option<&Sprite> {
+        self.v.get(index)
     }
 }
 

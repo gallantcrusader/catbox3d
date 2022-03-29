@@ -39,7 +39,7 @@ fn main() {
         let angle = (y_diff as f64).atan2(x_diff as f64);
         s.set_angle(angle.to_degrees());
 
-        for spr in coll.iter_mut() {
+        for spr in coll.iter() {
             let (start_x, start_y) = spr.position();
             let m = sdl2::mouse::MouseState::new(event_pump.as_ref());
             let x_diff = m.x() - start_x;
@@ -68,7 +68,7 @@ fn main() {
 
                     s.translate(offset);
                     
-                    for spr in coll.iter_mut() {
+                    for spr in coll.iter() {
                         spr.translate(offset);
                     }
                 }
