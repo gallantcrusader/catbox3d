@@ -49,7 +49,7 @@
 //! }
 //! ```
 
-use std::{cell::Cell, path::Path};
+use std::{cell::Cell, path::Path, ops::{DerefMut, Deref}};
 
 use sdl2::{
     image::ImageRWops,
@@ -238,6 +238,46 @@ impl Sprite {
     /// ```
     pub fn position(&self) -> (i32, i32) {
         self.rect.center().into()
+    }
+}
+
+pub struct SpriteCollection {
+    v: Vec<Sprite>,
+}
+
+impl SpriteCollection {
+    pub fn new() -> Self {
+        Self {
+            v: Vec::new()
+        }
+    }
+
+    pub fn with_capacity(cap: usize) -> Self {
+        Self {
+            v: Vec::with_capacity(cap)
+        }
+    }
+
+    pub fn draw(&mut self, ctx: &mut Context) -> Result<()> {
+        for s in self.v.iter_mut() {
+            s.draw(ctx)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl Deref for SpriteCollection {
+    type Target = Vec<Sprite>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.v
+    }
+}
+
+impl DerefMut for SpriteCollection {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.v
     }
 }
 
