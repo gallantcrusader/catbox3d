@@ -1,4 +1,5 @@
-use cat_box::{draw_text, Event, Game, Keycode, Sprite, SpriteCollection};
+use cat_box::{draw_text, Game, Sprite, SpriteCollection, get_mouse_state, get_keyboard_state};
+use sdl2::keyboard::Scancode;
 
 fn main() {
     let game = Game::new("catbox demo", 1000, 800);
@@ -14,7 +15,7 @@ fn main() {
             coll.push(x);
         }
     } 
-    game.run(|ctx, event_pump| {
+    game.run(|ctx| {
         i = (i + 1) % 255;
         ctx.set_background_colour(i as u8, 64, 255);
 
@@ -32,47 +33,42 @@ fn main() {
         .unwrap();
 
         let (start_x, start_y) = s.position();
-        let m = sdl2::mouse::MouseState::new(event_pump.as_ref());
-        let x_diff = m.x() - start_x;
-        let y_diff = m.y() - start_y;
+        let m = get_mouse_state(ctx);
+        let x_diff = m.x - start_x;
+        let y_diff = m.y - start_y;
 
         let angle = (y_diff as f64).atan2(x_diff as f64);
         s.set_angle(angle.to_degrees());
 
         for spr in coll.iter() {
             let (start_x, start_y) = spr.position();
-            let m = sdl2::mouse::MouseState::new(event_pump.as_ref());
-            let x_diff = m.x() - start_x;
-            let y_diff = m.y() - start_y;
+            let m = get_mouse_state(ctx);
+            let x_diff = m.x - start_x;
+            let y_diff = m.y - start_y;
 
             let angle = (y_diff as f64).atan2(x_diff as f64);
             spr.set_angle(angle.to_degrees());
         }
 
-        for event in event_pump {
-            match event {
-                Event::Quit { .. }
-                | Event::KeyDown {
-                    keycode: Some(Keycode::Escape),
-                    ..
-                } => game.terminate(),
+        let keys = get_keyboard_state(ctx).keys;
 
-                Event::KeyDown { keycode, .. } => {
-                    let offset = match keycode.unwrap() {
-                        Keycode::W | Keycode::Up => (0, 5),
-                        Keycode::S | Keycode::Down => (0, -5),
-                        Keycode::A | Keycode::Left => (-5, 0),
-                        Keycode::D | Keycode::Right => (5, 0),
-                        _ => (0, 0),
-                    };
+        for key in keys {
+            let offset = match key {
+                Scancode::Escape => {
+                    game.terminate();
+                    (0, 0)
+                },
+                Scancode::W | Scancode::Up => (0, 5),
+                Scancode::S | Scancode::Down => (0, -5),
+                Scancode::A | Scancode::Left => (-5, 0),
+                Scancode::D | Scancode::Right => (5, 0),
+                _ => (0, 0),
+            };
 
-                    s.translate(offset);
-                    
-                    for spr in coll.iter() {
-                        spr.translate(offset);
-                    }
-                }
-                _ => {}
+            s.translate(offset);
+
+            for spr in coll.iter() {
+                spr.translate(offset);
             }
         }
 

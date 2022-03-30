@@ -59,7 +59,7 @@ use sdl2::{
     surface::Surface,
     ttf::{FontError, Sdl2TtfContext},
     video::{Window, WindowBuildError, WindowContext},
-    EventPump, IntegerOrSdlError,
+    EventPump, IntegerOrSdlError, mouse::MouseButton, keyboard::Scancode,
 };
 
 #[doc(no_inline)]
@@ -184,7 +184,7 @@ impl Sprite {
     /// # });
     /// ```
     pub fn draw(&mut self, ctx: &mut Context) -> Result<()> {
-        let (creator, canvas) = ctx.inner();
+        let (creator, canvas, _) = ctx.inner();
         let text = creator.create_texture_from_surface(&self.surf)?;
 
         canvas.copy_ex(&text, None, self.rect, self.angle, None, false, false)?;
@@ -411,15 +411,17 @@ impl DerefMut for SpriteCollection {
 /// In most cases, this should never actually be used; instead, just pass it around to the various cat-box functions such as [`Sprite::draw()`].
 pub struct Context {
     canvas: Canvas<Window>,
+    event_pump: EventPump,
     texture_creator: TextureCreator<WindowContext>,
     ttf_subsystem: Sdl2TtfContext,
 }
 
 impl Context {
-    fn new(canvas: Canvas<Window>, ttf_subsystem: Sdl2TtfContext) -> Self {
+    fn new(canvas: Canvas<Window>, pump: EventPump, ttf_subsystem: Sdl2TtfContext) -> Self {
         let creator = canvas.texture_creator();
         Self {
             canvas,
+            event_pump: pump,
             texture_creator: creator,
             ttf_subsystem,
         }
@@ -428,8 +430,8 @@ impl Context {
     /// Get the inner [`Canvas`](sdl2::render::Canvas) and [`TextureCreator`](sdl2::render::TextureCreator).
     ///
     /// Only use this method if you know what you're doing.
-    pub fn inner(&mut self) -> (&TextureCreator<WindowContext>, &mut Canvas<Window>) {
-        (&self.texture_creator, &mut self.canvas)
+    pub fn inner(&mut self) -> (&TextureCreator<WindowContext>, &mut Canvas<Window>, &mut EventPump) {
+        (&self.texture_creator, &mut self.canvas, &mut self.event_pump)
     }
 
     fn update(&mut self) {
@@ -438,6 +440,18 @@ impl Context {
 
     fn clear(&mut self) {
         self.canvas.clear();
+    }
+
+    fn check_for_quit(&mut self) -> bool {
+        let (_, _, pump) = self.inner();
+
+        for event in pump.poll_iter() {
+            if let Event::Quit { .. } = event {
+                return true;
+            }
+        } 
+
+        false
     }
 
     /// Set the background colour. See [`Canvas::set_draw_color()`](sdl2::render::Canvas::set_draw_color()) for more info.
@@ -497,7 +511,7 @@ pub fn draw_text<S: AsRef<str>>(
     }?;
 
     drop(font);
-    let (creator, canvas) = ctx.inner();
+    let (creator, canvas, _) = ctx.inner();
     let texture = creator.create_texture_from_surface(&surf)?;
 
     let srect = surf.rect();
@@ -506,6 +520,39 @@ pub fn draw_text<S: AsRef<str>>(
     canvas.copy_ex(&texture, None, dest_rect, 0.0, None, false, false)?;
 
     Ok(())
+}
+
+#[derive(Debug)]
+pub struct MouseRepr {
+    pub buttons: Vec<MouseButton>,
+    pub x: i32,
+    pub y: i32
+}
+
+pub struct KeyboardRepr {
+    pub keys: Vec<Scancode>
+}
+
+pub fn get_mouse_state(ctx: &mut Context) -> MouseRepr {
+    let (_, _, pump) = ctx.inner();
+
+    let mouse = pump.mouse_state();
+
+    MouseRepr {
+        buttons: mouse.pressed_mouse_buttons().collect(),
+        x: mouse.x(),
+        y: mouse.y(),
+    }
+}
+
+pub fn get_keyboard_state(ctx: &mut Context) -> KeyboardRepr {
+    let (_, _, pump) = ctx.inner();
+
+    let keyboard = pump.keyboard_state();
+    
+    KeyboardRepr {
+        keys: keyboard.pressed_scancodes().collect()
+    }
 }
 
 /// Representation of the game.
@@ -547,7 +594,7 @@ impl Game {
     ///     // Game logic goes here
     /// });
     /// ```
-    pub fn run<F: FnMut(&mut Context, &mut Events)>(&self, mut func: F) -> Result<()> {
+    pub fn run<F: FnMut(&mut Context)>(&self, mut func: F) -> Result<()> {
         let sdl_context = sdl2::init()?;
         let video_subsystem = sdl_context.video()?;
 
@@ -562,17 +609,15 @@ impl Game {
         let s = sdl2::ttf::init().unwrap();
 
         let event_pump = sdl_context.event_pump()?;
-
-        let mut events = Events { pump: event_pump };
-
-        let mut ctx = Context::new(canvas, s);
+        
+        let mut ctx = Context::new(canvas, event_pump, s);
 
         loop {
-            if self.stopped.get() {
+            if self.stopped.get() || ctx.check_for_quit() {
                 break;
             }
             ctx.clear();
-            func(&mut ctx, &mut events);
+            func(&mut ctx);
             ctx.update();
         }
 
