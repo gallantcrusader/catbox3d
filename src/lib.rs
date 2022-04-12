@@ -6,22 +6,22 @@
 //!
 //! fn main() {
 //!    let game = Game::new("catbox demo", 1000, 800);
-//! 
+//!
 //!     let mut i = 0u8;
 //!     let mut s = Sprite::new("duck.png", 500, 400).unwrap();
 //!     let mut s2 = Sprite::new("duck.png", 400, 500).unwrap();
-//! 
+//!
 //!     let mut coll = SpriteCollection::new();
 //!     for n in 0..10 {
 //!         for o in 0..8 {
 //!             let x = Sprite::new("duck.png", n * 100, o * 100).unwrap();
 //!             coll.push(x);
 //!         }
-//!     } 
+//!     }
 //!     game.run(|ctx| {
 //!         i = (i + 1) % 255;
 //!         ctx.set_background_colour(i as u8, 64, 255);
-//! 
+//!
 //!         draw_text(
 //!             ctx,
 //!             format!("i is {}", i),
@@ -34,27 +34,27 @@
 //!             },
 //!         )
 //!         .unwrap();
-//! 
+//!
 //!         let (start_x, start_y) = s.position();
 //!         let m = get_mouse_state(ctx);
 //!         let x_diff = m.x - start_x;
 //!         let y_diff = m.y - start_y;
-//! 
+//!
 //!         let angle = (y_diff as f64).atan2(x_diff as f64);
 //!         s.set_angle(angle.to_degrees());
-//! 
+//!
 //!         for spr in coll.iter() {
 //!             let (start_x, start_y) = spr.position();
 //!             let m = get_mouse_state(ctx);
 //!             let x_diff = m.x - start_x;
 //!             let y_diff = m.y - start_y;
-//! 
+//!
 //!             let angle = (y_diff as f64).atan2(x_diff as f64);
 //!             spr.set_angle(angle.to_degrees());
 //!         }
-//! 
+//!
 //!         let keys = get_keyboard_state(ctx).keys;
-//! 
+//!
 //!         for key in keys {
 //!             let offset = match key {
 //!                 Scancode::Escape => {
@@ -67,14 +67,14 @@
 //!                 Scancode::D | Scancode::Right => (5, 0),
 //!                 _ => (0, 0),
 //!             };
-//! 
+//!
 //!             s.translate(offset);
-//! 
+//!
 //!             for spr in coll.iter() {
 //!                 spr.translate(offset);
 //!             }
 //!         }
-//! 
+//!
 //!         s2.draw(ctx).unwrap();
 //!         s.draw(ctx).unwrap();
 //!         coll.draw(ctx).unwrap();
@@ -83,17 +83,26 @@
 //! }
 //! ```
 
-use std::{cell::Cell, path::Path, ops::{DerefMut, Deref}, slice::IterMut};
+pub mod physics;
+
+use std::{
+    cell::Cell,
+    ops::{Deref, DerefMut},
+    path::Path,
+    slice::IterMut,
+};
 
 use sdl2::{
     image::ImageRWops,
+    keyboard::Scancode,
+    mouse::MouseButton,
     rect::Rect,
     render::{Canvas, TextureCreator, TextureValueError},
     rwops::RWops,
     surface::Surface,
     ttf::{FontError, Sdl2TtfContext},
     video::{Window, WindowBuildError, WindowContext},
-    EventPump, IntegerOrSdlError, mouse::MouseButton, keyboard::Scancode,
+    EventPump, IntegerOrSdlError,
 };
 
 #[doc(no_inline)]
@@ -275,8 +284,8 @@ impl Sprite {
     }
 }
 
-/// Manages a collection of [`Sprite`]s. 
-/// 
+/// Manages a collection of [`Sprite`]s.
+///
 /// Technically, this is a thin wrapper around a simple [`Vec`] of sprites,
 /// although with some convenience methods.
 pub struct SpriteCollection {
@@ -285,20 +294,18 @@ pub struct SpriteCollection {
 
 impl SpriteCollection {
     /// Creates a new [`SpriteCollection`].
-    /// 
+    ///
     /// See [`Vec::new()`] for more information.
     /// ```
     /// # use cat_box::*;
     /// let sprites = SpriteCollection::new();
     /// ```
     pub fn new() -> Self {
-        Self {
-            v: Vec::new()
-        }
+        Self { v: Vec::new() }
     }
 
     /// Creates a new [`SpriteCollection`] with the specified capacity.
-    /// 
+    ///
     /// The collection will be able to hold exactly `capacity` items without reallocating.
     /// ```
     /// # use cat_box::*;
@@ -306,7 +313,7 @@ impl SpriteCollection {
     /// ```
     pub fn with_capacity(cap: usize) -> Self {
         Self {
-            v: Vec::with_capacity(cap)
+            v: Vec::with_capacity(cap),
         }
     }
 
@@ -318,7 +325,7 @@ impl SpriteCollection {
     /// # let mut game = Game::new("asjdfhalksjdf", 1, 1);
     /// # game.run(|ctx| {
     /// sprites.draw(ctx);
-    /// # }); 
+    /// # });
     /// ```
     pub fn draw(&mut self, ctx: &mut Context) -> Result<()> {
         for s in self.v.iter_mut() {
@@ -327,7 +334,7 @@ impl SpriteCollection {
 
         Ok(())
     }
-    
+
     /// Add a new [`Sprite`] to the end of this collection.
     /// ```
     /// # use cat_box::*;
@@ -336,7 +343,7 @@ impl SpriteCollection {
     /// sprites.push(s);
     /// ```
     pub fn push(&mut self, s: Sprite) {
-        self.v.push(s); 
+        self.v.push(s);
     }
 
     /// Inserts an element at position `index` within the collection.
@@ -350,7 +357,7 @@ impl SpriteCollection {
     pub fn insert(&mut self, s: Sprite, index: usize) {
         self.v.insert(index, s);
     }
-    
+
     /// Removes and returns the last element, or `None` if the collection is empty.
     /// ```
     /// # use cat_box::*;
@@ -424,6 +431,11 @@ impl SpriteCollection {
     pub fn get(&self, index: usize) -> Option<&Sprite> {
         self.v.get(index)
     }
+
+    /// Return the inner Vec. Only use this method if you know what you're doing.
+    pub fn inner(&self) -> &Vec<Sprite> {
+        &self.v
+    }
 }
 
 impl Deref for SpriteCollection {
@@ -464,8 +476,18 @@ impl Context {
     /// Get the inner [`Canvas`](sdl2::render::Canvas) and [`TextureCreator`](sdl2::render::TextureCreator).
     ///
     /// Only use this method if you know what you're doing.
-    pub fn inner(&mut self) -> (&TextureCreator<WindowContext>, &mut Canvas<Window>, &mut EventPump) {
-        (&self.texture_creator, &mut self.canvas, &mut self.event_pump)
+    pub fn inner(
+        &mut self,
+    ) -> (
+        &TextureCreator<WindowContext>,
+        &mut Canvas<Window>,
+        &mut EventPump,
+    ) {
+        (
+            &self.texture_creator,
+            &mut self.canvas,
+            &mut self.event_pump,
+        )
     }
 
     fn update(&mut self) {
@@ -483,7 +505,7 @@ impl Context {
             if let Event::Quit { .. } = event {
                 return true;
             }
-        } 
+        }
 
         false
     }
@@ -560,12 +582,12 @@ pub fn draw_text<S: AsRef<str>>(
 pub struct MouseRepr {
     pub buttons: Vec<MouseButton>,
     pub x: i32,
-    pub y: i32
+    pub y: i32,
 }
 
 /// Representation of the keyboard state.
 pub struct KeyboardRepr {
-    pub keys: Vec<Scancode>
+    pub keys: Vec<Scancode>,
 }
 
 /// Get the mouse state.
@@ -602,9 +624,9 @@ pub fn get_keyboard_state(ctx: &mut Context) -> KeyboardRepr {
     let (_, _, pump) = ctx.inner();
 
     let keyboard = pump.keyboard_state();
-    
+
     KeyboardRepr {
-        keys: keyboard.pressed_scancodes().collect()
+        keys: keyboard.pressed_scancodes().collect(),
     }
 }
 
@@ -662,7 +684,7 @@ impl Game {
         let s = sdl2::ttf::init().unwrap();
 
         let event_pump = sdl_context.event_pump()?;
-        
+
         let mut ctx = Context::new(canvas, event_pump, s);
 
         loop {

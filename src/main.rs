@@ -1,4 +1,4 @@
-use cat_box::{draw_text, Game, Sprite, SpriteCollection, get_mouse_state, get_keyboard_state};
+use cat_box::{draw_text, get_keyboard_state, get_mouse_state, Game, Sprite, SpriteCollection};
 use sdl2::keyboard::Scancode;
 
 fn main() {
@@ -14,7 +14,7 @@ fn main() {
             let x = Sprite::new("duck.png", n * 100, o * 100).unwrap();
             coll.push(x);
         }
-    } 
+    }
     game.run(|ctx| {
         i = (i + 1) % 255;
         ctx.set_background_colour(i as u8, 64, 255);
@@ -57,7 +57,7 @@ fn main() {
                 Scancode::Escape => {
                     game.terminate();
                     (0, 0)
-                },
+                }
                 Scancode::W | Scancode::Up => (0, 5),
                 Scancode::S | Scancode::Down => (0, -5),
                 Scancode::A | Scancode::Left => (-5, 0),
@@ -70,6 +70,10 @@ fn main() {
             for spr in coll.iter() {
                 spr.translate(offset);
             }
+        }
+
+        if !cat_box::physics::check_for_collision_with_collection(&s2, &coll).is_empty() {
+            println!("Sprites collided! {}", i);
         }
 
         s2.draw(ctx).unwrap();
