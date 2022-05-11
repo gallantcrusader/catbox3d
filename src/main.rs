@@ -8,10 +8,12 @@ fn main() {
     let mut s = Sprite::new("duck.png", 500, 400).unwrap();
     let mut s2 = Sprite::new("duck.png", 400, 500).unwrap();
 
+    let bytes = include_bytes!("../duck.png");
+
     let mut coll = SpriteCollection::new();
     for n in 0..10 {
         for o in 0..8 {
-            let x = Sprite::new("duck.png", n * 100, o * 100).unwrap();
+            let x = Sprite::from_bytes(bytes, n * 100, o * 100).unwrap();
             coll.push(x);
         }
     }

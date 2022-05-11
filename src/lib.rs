@@ -216,6 +216,28 @@ impl Sprite {
         })
     }
 
+    /// Create a new sprite using a slice of bytes, like what is returned from `include_bytes!`
+    ///
+    /// Don't forget to call [`draw()`](Self::draw()) after this.
+    /// ```
+    /// # use cat_box::*;
+    /// let bytes = include_bytes!("../duck.png");
+    /// let s = Sprite::from_bytes(bytes, 500, 400).unwrap();
+    /// ```
+    pub fn from_bytes<B: AsRef<[u8]>>(bytes: B, x: i32, y: i32) -> Result<Self> {
+        let ops = RWops::from_bytes(bytes.as_ref())?;
+        let surf = ops.load()?;
+
+        let srect = surf.rect();
+        let dest_rect: Rect = Rect::from_center((x, y), srect.width(), srect.height());
+
+        Ok(Self {
+            rect: dest_rect,
+            surf,
+            angle: 0.0,
+        })
+    }
+
     /// Draws the sprite to the window. This should only be called inside your main event loop.
     ///
     /// ```no_run
