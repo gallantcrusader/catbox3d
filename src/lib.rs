@@ -272,6 +272,17 @@ impl Sprite {
         self.rect.set_y(new_y);
     }
 
+    /// Reposition the center of the sprite in the form of (x, y)
+    ///
+    /// ```
+    /// # use cat_box::*;
+    /// # let mut s = Sprite::new("duck.png", 500, 400).unwrap();
+    /// s.set_position((5, 10));
+    /// ```
+    pub fn set_position(&mut self, position: (i32, i32)) {
+        self.rect.center_on(position);
+    }
+
     /// Set the angle of the sprite, in degrees of clockwise rotation.
     ///
     /// ```
