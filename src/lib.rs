@@ -92,9 +92,8 @@ use std::{
     slice::IterMut,
 };
 
-pub use sdl2::{
+use sdl2::{
     image::ImageRWops,
-    keyboard::Scancode,
     mouse::MouseButton,
     rect::Rect,
     render::{Canvas, TextureCreator, TextureValueError},
@@ -106,11 +105,7 @@ pub use sdl2::{
 };
 
 #[doc(no_inline)]
-pub use sdl2::event::Event;
-#[doc(no_inline)]
-pub use sdl2::keyboard::Keycode;
-#[doc(no_inline)]
-pub use sdl2::pixels::Color;
+pub use sdl2::{self, event::Event, keyboard::Scancode, pixels::Color};
 
 /// Utility macro for cloning things into closures.
 ///
