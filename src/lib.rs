@@ -92,7 +92,7 @@ use std::{
     slice::IterMut,
 };
 
-use sdl2::{
+pub use sdl2::{
     image::ImageRWops,
     keyboard::Scancode,
     mouse::MouseButton,
@@ -189,7 +189,7 @@ impl Iterator for Events {
 
 /// Representation of a sprite.
 pub struct Sprite {
-    rect: Rect,
+    pub rect: Rect,
     surf: Surface<'static>,
     angle: f64,
 }
