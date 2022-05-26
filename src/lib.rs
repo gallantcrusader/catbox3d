@@ -84,7 +84,7 @@
 //! ```
 
 pub mod physics;
-pub mod vec;
+pub mod vec2;
 
 use std::{
     cell::Cell,
@@ -190,7 +190,6 @@ pub struct Sprite {
     angle: f64,
     is_platform: bool,
 }
-
 
 impl Sprite {
     /// Create a new Sprite. The `path` is relative to the current directory while running.
