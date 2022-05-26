@@ -84,6 +84,7 @@
 //! ```
 
 pub mod physics;
+pub mod vec;
 
 use std::{
     cell::Cell,
@@ -187,7 +188,9 @@ pub struct Sprite {
     pub rect: Rect,
     surf: Surface<'static>,
     angle: f64,
+    is_platform: bool,
 }
+
 
 impl Sprite {
     /// Create a new Sprite. The `path` is relative to the current directory while running.
@@ -197,7 +200,7 @@ impl Sprite {
     /// # use cat_box::*;
     /// let s = Sprite::new("duck.png", 500, 400).unwrap();
     /// ```
-    pub fn new<P: AsRef<Path>>(path: P, x: i32, y: i32) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, x: i32, y: i32, plat: bool) -> Result<Self> {
         let ops = RWops::from_file(path, "r")?;
         let surf = ops.load()?;
 
@@ -208,6 +211,7 @@ impl Sprite {
             rect: dest_rect,
             surf,
             angle: 0.0,
+            is_platform: plat,
         })
     }
 
@@ -219,7 +223,7 @@ impl Sprite {
     /// let bytes = include_bytes!("../duck.png");
     /// let s = Sprite::from_bytes(bytes, 500, 400).unwrap();
     /// ```
-    pub fn from_bytes<B: AsRef<[u8]>>(bytes: B, x: i32, y: i32) -> Result<Self> {
+    pub fn from_bytes<B: AsRef<[u8]>>(bytes: B, x: i32, y: i32, plat: bool) -> Result<Self> {
         let ops = RWops::from_bytes(bytes.as_ref())?;
         let surf = ops.load()?;
 
@@ -230,6 +234,7 @@ impl Sprite {
             rect: dest_rect,
             surf,
             angle: 0.0,
+            is_platform: plat,
         })
     }
 
