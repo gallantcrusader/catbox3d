@@ -1,7 +1,7 @@
 //! Types representing directions and locations in 2d and 3d space.
 //!
 //!
-//! This module contains 6 major types:
+//! This module contains 3 major types:
 //!  - [`Vec2`], a 2d float vector
 //!  - [`Vec2Int`], a 2d integer vector
 //!  - [`Direction`], a 2d cardinal direction
