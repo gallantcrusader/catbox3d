@@ -1,31 +1,26 @@
 //! Types representing directions and locations in 2d and 3d space.
-//! 
-//! NOTE: `Vec3`, `Vec3Int`, and `Direction3` don't exist yet. Coming soon!
-//! 
-//! This crate contains 6 major types:
+//!
+//!
+//! This module contains 6 major types:
 //!  - [`Vec2`], a 2d float vector
 //!  - [`Vec2Int`], a 2d integer vector
-//!  - [`Direction2`], a 2d cardinal direction
-//!  - [`Vec3`], a 3d float vector (TODO)
-//!  - [`Vec3Int`], a 3d integer vector (TODO)
-//!  - [`Direction3`], a 3d cardinal direction (TODO)
-//! 
+//!  - [`Direction`], a 2d cardinal direction
+//!
 //! All the types implement the expected [`From`]s and all the relevant operator traits.
 
-#![warn(clippy::pedantic)]
-#![warn(missing_docs)]
-#![allow(clippy::must_use_candidate)]
+use std::{
+    fmt::Debug,
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
-
-
-use std::{ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign}, fmt::Debug};
+use sdl2::rect::Point;
 
 // Direction
 /// A cardinal direction in a 2d plane.
 ///
 /// Conversions to a [`Vec2`] or [`Vec2Int`] assume that East is positive-x and South is positive-y.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Direction2 {
+pub enum Direction {
     /// North, or Vec2::from((0, -1))
     North,
     /// North, or Vec2::from((0, 1))
@@ -37,7 +32,7 @@ pub enum Direction2 {
 }
 
 #[allow(clippy::enum_glob_use)]
-impl Direction2 {
+impl Direction {
     /// Flips this `Direction` around both the x- and y-axes.
     pub fn flipped(self) -> Self {
         self.flip_x().flip_y()
@@ -45,7 +40,7 @@ impl Direction2 {
 
     /// Flips this `Direction` around the x-axis.
     pub fn flip_x(self) -> Self {
-        use Direction2::*;
+        use Direction::*;
         match self {
             East => West,
             West => East,
@@ -55,7 +50,7 @@ impl Direction2 {
 
     /// Flips this `Direction` around the y-axis.
     pub fn flip_y(self) -> Self {
-        use Direction2::*;
+        use Direction::*;
         match self {
             North => South,
             South => North,
@@ -65,7 +60,7 @@ impl Direction2 {
 }
 
 // ...and related op impls
-impl Neg for Direction2 {
+impl Neg for Direction {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -74,9 +69,9 @@ impl Neg for Direction2 {
 }
 
 #[allow(clippy::enum_glob_use)]
-impl From<Direction2> for Vec2 {
-    fn from(v: Direction2) -> Self {
-        use Direction2::*;
+impl From<Direction> for Vec2 {
+    fn from(v: Direction) -> Self {
+        use Direction::*;
         match v {
             North => (0.0, -1.0).into(),
             South => (0.0, 1.0).into(),
@@ -87,9 +82,9 @@ impl From<Direction2> for Vec2 {
 }
 
 #[allow(clippy::enum_glob_use)]
-impl From<Direction2> for Vec2Int {
-    fn from(v: Direction2) -> Self {
-        use Direction2::*;
+impl From<Direction> for Vec2Int {
+    fn from(v: Direction) -> Self {
+        use Direction::*;
         match v {
             North => (0, -1).into(),
             South => (0, 1).into(),
@@ -99,7 +94,21 @@ impl From<Direction2> for Vec2Int {
     }
 }
 
-impl Mul<f32> for Direction2 {
+impl From<Point> for Vec2 {
+    fn from(p: Point) -> Self {
+        let x: (i32, i32) = p.into();
+        x.into()
+    }
+}
+
+impl From<Point> for Vec2Int {
+    fn from(p: Point) -> Self {
+        let x: (i32, i32) = p.into();
+        x.into()
+    }
+}
+
+impl Mul<f32> for Direction {
     type Output = Vec2;
 
     fn mul(self, rhs: f32) -> Self::Output {
@@ -107,7 +116,7 @@ impl Mul<f32> for Direction2 {
     }
 }
 
-impl Mul<i32> for Direction2 {
+impl Mul<i32> for Direction {
     type Output = Vec2Int;
 
     fn mul(self, rhs: i32) -> Self::Output {
@@ -230,10 +239,10 @@ impl Add for Vec2 {
     }
 }
 
-impl Add<Direction2> for Vec2 {
+impl Add<Direction> for Vec2 {
     type Output = Self;
 
-    fn add(self, rhs: Direction2) -> Self::Output {
+    fn add(self, rhs: Direction) -> Self::Output {
         self + Self::from(rhs)
     }
 }
@@ -313,7 +322,10 @@ pub struct Vec2Int {
 
 impl Debug for Vec2Int {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("Vec2Int").field(&self.x).field(&self.y).finish()
+        f.debug_tuple("Vec2Int")
+            .field(&self.x)
+            .field(&self.y)
+            .finish()
     }
 }
 
@@ -400,10 +412,10 @@ impl Add for Vec2Int {
     }
 }
 
-impl Add<Direction2> for Vec2Int {
+impl Add<Direction> for Vec2Int {
     type Output = Self;
 
-    fn add(self, rhs: Direction2) -> Self::Output {
+    fn add(self, rhs: Direction) -> Self::Output {
         self + Self::from(rhs)
     }
 }

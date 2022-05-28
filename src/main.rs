@@ -34,7 +34,7 @@ fn main() {
         )
         .unwrap();
 
-        let (start_x, start_y) = s.position();
+        let (start_x, start_y) = s.position().into();
         let m = get_mouse_state(ctx);
         let x_diff = m.x - start_x;
         let y_diff = m.y - start_y;
@@ -43,7 +43,7 @@ fn main() {
         s.set_angle(angle.to_degrees());
 
         for spr in coll.iter() {
-            let (start_x, start_y) = spr.position();
+            let (start_x, start_y) = spr.position().into();
             let m = get_mouse_state(ctx);
             let x_diff = m.x - start_x;
             let y_diff = m.y - start_y;

@@ -1,3 +1,7 @@
+//! Basic physics utilities for cat-box.
+//!
+//! Still ***very much work-in-progress***
+
 use crate::{Sprite, SpriteCollection};
 use std::cmp::max;
 
@@ -10,14 +14,14 @@ fn collided(sprite1: &Sprite, sprite2: &Sprite) -> bool {
     let collision_radius = coll_rad1 + coll_rad2;
     let collision_diameter = collision_radius * collision_radius;
 
-    let diff_x = sprite1.position().0 - sprite2.position().0;
+    let diff_x = sprite1.position().x - sprite2.position().x;
     let diff_x2 = diff_x * diff_x;
 
     if diff_x2 > collision_diameter {
         return false;
     }
 
-    let diff_y = sprite1.position().1 - sprite2.position().1;
+    let diff_y = sprite1.position().y - sprite2.position().y;
     let diff_y2 = diff_y * diff_y;
 
     if diff_y2 > collision_diameter {

@@ -35,7 +35,7 @@
 //!         )
 //!         .unwrap();
 //!
-//!         let (start_x, start_y) = s.position();
+//!         let (start_x, start_y) = s.position().into();
 //!         let m = get_mouse_state(ctx);
 //!         let x_diff = m.x - start_x;
 //!         let y_diff = m.y - start_y;
@@ -44,7 +44,7 @@
 //!         s.set_angle(angle.to_degrees());
 //!
 //!         for spr in coll.iter() {
-//!             let (start_x, start_y) = spr.position();
+//!             let (start_x, start_y) = spr.position().into();
 //!             let m = get_mouse_state(ctx);
 //!             let x_diff = m.x - start_x;
 //!             let y_diff = m.y - start_y;
@@ -104,6 +104,8 @@ use sdl2::{
     video::{Window, WindowBuildError, WindowContext},
     EventPump, IntegerOrSdlError,
 };
+
+use vec2::Vec2Int;
 
 #[doc(no_inline)]
 pub use sdl2::{self, event::Event, keyboard::Scancode, pixels::Color};
@@ -188,7 +190,6 @@ pub struct Sprite {
     pub rect: Rect,
     surf: Surface<'static>,
     angle: f64,
-    
 }
 
 impl Sprite {
@@ -210,7 +211,6 @@ impl Sprite {
             rect: dest_rect,
             surf,
             angle: 0.0,
-            
         })
     }
 
@@ -233,7 +233,6 @@ impl Sprite {
             rect: dest_rect,
             surf,
             angle: 0.0,
-            
         })
     }
 
@@ -263,9 +262,10 @@ impl Sprite {
     /// # let mut s = Sprite::new("duck.png", 500, 400).unwrap();
     /// s.translate((5, 10));
     /// ```
-    pub fn translate(&mut self, position: (i32, i32)) {
-        let new_x = self.rect.x() + position.0;
-        let new_y = self.rect.y() - position.1;
+    pub fn translate<I: Into<Vec2Int>>(&mut self, position: I) {
+        let position = position.into();
+        let new_x = self.rect.x() + position.x;
+        let new_y = self.rect.y() - position.y;
 
         self.rect.set_x(new_x);
         self.rect.set_y(new_y);
@@ -278,8 +278,9 @@ impl Sprite {
     /// # let mut s = Sprite::new("duck.png", 500, 400).unwrap();
     /// s.set_position((5, 10));
     /// ```
-    pub fn set_position(&mut self, position: (i32, i32)) {
-        self.rect.center_on(position);
+    pub fn set_position<I: Into<Vec2Int>>(&mut self, position: I) {
+        let position = position.into();
+        self.rect.center_on((position.x, position.y));
     }
 
     /// Set the angle of the sprite, in degrees of clockwise rotation.
@@ -309,9 +310,9 @@ impl Sprite {
     /// ```
     /// # use cat_box::*;
     /// # let s = Sprite::new("duck.png", 500, 400).unwrap();
-    /// let (x, y) = s.position();
+    /// let (x, y) = s.position().into();
     /// ```
-    pub fn position(&self) -> (i32, i32) {
+    pub fn position(&self) -> Vec2Int {
         self.rect.center().into()
     }
 }
@@ -579,12 +580,12 @@ pub enum TextMode {
 /// };
 /// draw_text(ctx, "text to draw", "arial.ttf", 72, (300, 300), mode);
 /// # });
-pub fn draw_text<S: AsRef<str>>(
+pub fn draw_text<S: AsRef<str>, I: Into<Vec2Int>>(
     ctx: &mut Context,
     text: S,
     font: &str,
     size: u16,
-    pos: (i32, i32),
+    pos: I,
     mode: TextMode,
 ) -> Result<()> {
     let font = ctx.ttf_subsystem.load_font(font, size)?;
@@ -602,8 +603,10 @@ pub fn draw_text<S: AsRef<str>>(
     let (creator, canvas, _) = ctx.inner();
     let texture = creator.create_texture_from_surface(&surf)?;
 
+    let pos = pos.into();
+
     let srect = surf.rect();
-    let dest_rect: Rect = Rect::from_center(pos, srect.width(), srect.height());
+    let dest_rect: Rect = Rect::from_center((pos.x, pos.y), srect.width(), srect.height());
 
     canvas.copy_ex(&texture, None, dest_rect, 0.0, None, false, false)?;
 
