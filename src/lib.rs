@@ -145,7 +145,7 @@ macro_rules! error_from_format {
     };
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct CatboxError(String);
 
 impl From<String> for CatboxError {
@@ -160,6 +160,12 @@ error_from_format! {
     TextureValueError,
     FontError,
     InitError
+}
+
+impl std::fmt::Display for CatboxError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
 }
 
 pub type Result<T> = std::result::Result<T, CatboxError>;
