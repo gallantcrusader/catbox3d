@@ -2,6 +2,8 @@
 //!
 //! Still ***very much work-in-progress***
 
+#![allow(clippy::cast_possible_wrap)]
+
 use crate::{Sprite, SpriteCollection};
 use std::cmp::max;
 
@@ -28,16 +30,18 @@ fn collided(sprite1: &Sprite, sprite2: &Sprite) -> bool {
         return false;
     }
 
-    return sprite1.rect.has_intersection(sprite2.rect);
+    sprite1.rect.has_intersection(sprite2.rect)
 }
 
 /// Check if two sprites are touching or overlapping.
+#[must_use]
 pub fn check_for_collision(sprite1: &Sprite, sprite2: &Sprite) -> bool {
     collided(sprite1, sprite2)
 }
 
 /// Check if the sprite is colliding with any sprite in the collection, and return a list of
 /// references to the sprites which are colliding
+#[must_use]
 pub fn check_for_collision_with_collection<'a>(
     sprite: &Sprite,
     list: &'a SpriteCollection,

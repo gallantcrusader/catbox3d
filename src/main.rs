@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use cat_box::{draw_text, get_keyboard_state, get_mouse_state, Game, Sprite, SpriteCollection};
 use sdl2::keyboard::Scancode;
 
@@ -39,7 +41,7 @@ fn main() {
         let x_diff = m.x - start_x;
         let y_diff = m.y - start_y;
 
-        let angle = (y_diff as f64).atan2(x_diff as f64);
+        let angle = f64::from(y_diff).atan2(f64::from(x_diff));
         s.set_angle(angle.to_degrees());
 
         for spr in coll.iter() {
@@ -48,7 +50,7 @@ fn main() {
             let x_diff = m.x - start_x;
             let y_diff = m.y - start_y;
 
-            let angle = (y_diff as f64).atan2(x_diff as f64);
+            let angle = f64::from(y_diff).atan2(f64::from(x_diff));
             spr.set_angle(angle.to_degrees());
         }
 

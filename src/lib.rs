@@ -83,6 +83,14 @@
 //! }
 //! ```
 
+#![warn(clippy::pedantic)]
+#![allow(
+    clippy::similar_names,
+    clippy::needless_doctest_main,
+    clippy::module_name_repetitions,
+    clippy::missing_errors_doc
+)]
+
 pub mod physics;
 pub mod vec2;
 
@@ -100,7 +108,7 @@ use sdl2::{
     render::{Canvas, TextureCreator, TextureValueError},
     rwops::RWops,
     surface::Surface,
-    ttf::{FontError, Sdl2TtfContext},
+    ttf::{FontError, InitError, Sdl2TtfContext},
     video::{Window, WindowBuildError, WindowContext},
     EventPump, IntegerOrSdlError,
 };
@@ -125,14 +133,20 @@ macro_rules! cloned {
     }
 }
 
+macro_rules! error_from_format {
+    ($($t:ty),+) => {
+        $(
+        impl From<$t> for CatboxError {
+            fn from(e: $t) -> Self {
+                CatboxError(format!("{}", e))
+            }
+        }
+        )+
+    };
+}
+
 #[derive(Debug)]
 pub struct CatboxError(String);
-
-impl From<WindowBuildError> for CatboxError {
-    fn from(e: WindowBuildError) -> Self {
-        CatboxError(format!("{}", e))
-    }
-}
 
 impl From<String> for CatboxError {
     fn from(e: String) -> Self {
@@ -140,22 +154,12 @@ impl From<String> for CatboxError {
     }
 }
 
-impl From<IntegerOrSdlError> for CatboxError {
-    fn from(e: IntegerOrSdlError) -> Self {
-        CatboxError(format!("{}", e))
-    }
-}
-
-impl From<TextureValueError> for CatboxError {
-    fn from(e: TextureValueError) -> Self {
-        CatboxError(format!("{}", e))
-    }
-}
-
-impl From<FontError> for CatboxError {
-    fn from(e: FontError) -> Self {
-        CatboxError(format!("{}", e))
-    }
+error_from_format! {
+    WindowBuildError,
+    IntegerOrSdlError,
+    TextureValueError,
+    FontError,
+    InitError
 }
 
 pub type Result<T> = std::result::Result<T, CatboxError>;
@@ -301,6 +305,7 @@ impl Sprite {
     /// # let s = Sprite::new("duck.png", 500, 400).unwrap();
     /// let angle = s.angle();
     /// ```
+    #[must_use]
     pub fn angle(&self) -> f64 {
         self.angle
     }
@@ -312,6 +317,7 @@ impl Sprite {
     /// # let s = Sprite::new("duck.png", 500, 400).unwrap();
     /// let (x, y) = s.position().into();
     /// ```
+    #[must_use]
     pub fn position(&self) -> Vec2Int {
         self.rect.center().into()
     }
@@ -321,6 +327,7 @@ impl Sprite {
 ///
 /// Technically, this is a thin wrapper around a simple [`Vec`] of sprites,
 /// although with some convenience methods.
+#[derive(Default)]
 pub struct SpriteCollection {
     v: Vec<Sprite>,
 }
@@ -333,6 +340,7 @@ impl SpriteCollection {
     /// # use cat_box::*;
     /// let sprites = SpriteCollection::new();
     /// ```
+    #[must_use]
     pub fn new() -> Self {
         Self { v: Vec::new() }
     }
@@ -344,6 +352,7 @@ impl SpriteCollection {
     /// # use cat_box::*;
     /// let sprites = SpriteCollection::with_capacity(10);
     /// ```
+    #[must_use]
     pub fn with_capacity(cap: usize) -> Self {
         Self {
             v: Vec::with_capacity(cap),
@@ -361,7 +370,7 @@ impl SpriteCollection {
     /// # });
     /// ```
     pub fn draw(&mut self, ctx: &mut Context) -> Result<()> {
-        for s in self.v.iter_mut() {
+        for s in &mut self.v {
             s.draw(ctx)?;
         }
 
@@ -449,6 +458,7 @@ impl SpriteCollection {
     }
 
     /// Returns the length of this vector.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.v.len()
     }
@@ -461,13 +471,20 @@ impl SpriteCollection {
     /// # sprites.push(s);
     /// let s = sprites.get(0);
     /// ```
+    #[must_use]
     pub fn get(&self, index: usize) -> Option<&Sprite> {
         self.v.get(index)
     }
 
     /// Return the inner Vec. Only use this method if you know what you're doing.
+    #[must_use]
     pub fn inner(&self) -> &Vec<Sprite> {
         &self.v
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.v.is_empty()
     }
 }
 
@@ -550,6 +567,7 @@ impl Context {
 }
 
 /// Set the mode for drawing text.
+#[derive(Clone, Copy, Debug)]
 pub enum TextMode {
     /// Render the text transparently.
     Transparent { colour: (u8, u8, u8) },
@@ -686,6 +704,7 @@ impl Game {
     /// Game::new("cool game", 1000, 1000);
     /// ```
     ///
+    #[must_use]
     pub fn new(title: &str, width: u32, height: u32) -> Self {
         Self {
             title: title.to_string(),
@@ -716,7 +735,7 @@ impl Game {
             .build()?;
 
         let canvas = window.into_canvas().build()?;
-        let s = sdl2::ttf::init().unwrap();
+        let s = sdl2::ttf::init()?;
 
         let event_pump = sdl_context.event_pump()?;
 

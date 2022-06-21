@@ -34,11 +34,13 @@ pub enum Direction {
 #[allow(clippy::enum_glob_use)]
 impl Direction {
     /// Flips this `Direction` around both the x- and y-axes.
+    #[must_use]
     pub fn flipped(self) -> Self {
         self.flip_x().flip_y()
     }
 
     /// Flips this `Direction` around the x-axis.
+    #[must_use]
     pub fn flip_x(self) -> Self {
         use Direction::*;
         match self {
@@ -49,6 +51,7 @@ impl Direction {
     }
 
     /// Flips this `Direction` around the y-axis.
+    #[must_use]
     pub fn flip_y(self) -> Self {
         use Direction::*;
         match self {
@@ -144,6 +147,7 @@ impl Vec2 {
     /// Creates a new `Vec2` with the given x- and y-values.
     ///
     /// It is often simpler, and preferred, to just write `(x, y).into()`.
+    #[must_use]
     pub const fn new(x: f32, y: f32) -> Vec2 {
         Self { x, y }
     }
@@ -151,11 +155,13 @@ impl Vec2 {
     /// Gets the squared magnitude of the vector.
     ///
     /// Useful for comparisons as it is faster to calculate than `magnitude`.
+    #[must_use]
     pub fn sq_magnitude(self) -> f32 {
         self.x * self.x + self.y * self.y
     }
 
     /// Gets the magnitude of the vector.
+    #[must_use]
     pub fn magnitude(self) -> f32 {
         self.sq_magnitude().sqrt()
     }
@@ -163,16 +169,19 @@ impl Vec2 {
     /// Gets the squared distance from this vector to `rhs`.
     ///
     /// Useful for comparisons as it is faster to calculate than `dist`.
+    #[must_use]
     pub fn sq_dist(self, rhs: Self) -> f32 {
         (self - rhs).sq_magnitude()
     }
 
     /// Gets the distance from this vector to `rhs`.
+    #[must_use]
     pub fn dist(self, rhs: Self) -> f32 {
         (self - rhs).magnitude()
     }
 
     /// Normalizes the vector, making its magnitude `1`.
+    #[must_use]
     pub fn normalized(self) -> Self {
         self / self.magnitude()
     }
@@ -180,6 +189,7 @@ impl Vec2 {
     /// Rounds the vector to a [`Vec2Int`].
     ///
     /// This uses `as i32` under the hood, and as such comes with all the same unfortunate edge cases. Beware.
+    #[must_use]
     pub fn rounded(self) -> Vec2Int {
         #[allow(clippy::cast_possible_truncation)]
         Vec2Int {
@@ -333,6 +343,7 @@ impl Vec2Int {
     /// Creates a new `Vec2` with the given x- and y-values.
     ///
     /// It is often simpler, and preferred, to just write `(x, y).into()`.
+    #[must_use]
     pub const fn new(x: i32, y: i32) -> Vec2Int {
         Self { x, y }
     }
@@ -340,11 +351,13 @@ impl Vec2Int {
     /// Gets the squared magnitude of the vector.
     ///
     /// Useful for comparisons as it is faster to calculate than `magnitude`.
+    #[must_use]
     pub fn sq_magnitude(self) -> i32 {
         self.x * self.x + self.y * self.y
     }
 
     /// Gets the magnitude of the vector.
+    #[must_use]
     pub fn magnitude(self) -> f32 {
         #[allow(clippy::cast_precision_loss)]
         (self.sq_magnitude() as f32).sqrt()
@@ -353,11 +366,13 @@ impl Vec2Int {
     /// Gets the squared distance from this vector to `rhs`.
     ///
     /// Useful for comparisons as it is faster to calculate than `dist`.
+    #[must_use]
     pub fn sq_dist(self, rhs: Self) -> i32 {
         (self - rhs).sq_magnitude()
     }
 
     /// Gets the distance from this vector to `rhs`.
+    #[must_use]
     pub fn dist(self, rhs: Self) -> f32 {
         (self - rhs).magnitude()
     }
@@ -365,6 +380,7 @@ impl Vec2Int {
     /// Casts this vector to a [`Vec2`].
     ///
     /// This uses `as f32` under the hood, and as such comes with all the same unfortunate edge cases. Beware.
+    #[must_use]
     pub fn to_f32(self) -> Vec2 {
         #[allow(clippy::cast_precision_loss)]
         Vec2 {
