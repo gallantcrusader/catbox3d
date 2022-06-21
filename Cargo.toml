@@ -1,6 +1,6 @@
 [package]
 name = "cat-box"
-version = "0.1.8"
+version = "22.6.21"
 edition = "2018"
 license = "MIT"
 description = "Work in progress game engine, inspired by arcade"
@@ -16,4 +16,4 @@ features = ["image", "ttf"]
 
 [features]
 default = []
-static = ["sdl2/bundled"]
+static = ["sdl2/static-link", "sdl2/bundled"]
