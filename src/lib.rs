@@ -114,7 +114,7 @@ use sdl2::{
 };
 use std::fs::File;
 use std::io::BufReader;
-use rodio::{Decoder, OutputStream, source::Source};
+use rodio::{self, Decoder, OutputStream, source::Source};
 use vec2::Vec2Int;
 
 #[doc(no_inline)]
@@ -760,8 +760,24 @@ impl Game {
 
         Ok(())
     }
-    pub fn play(x: String, y: u64) {
-        thread::spawn(move || {
+    
+    /// Stops the game loop. This method should be called inside the closure that you passed to [`Self::run()`].
+    /// ```
+    /// # use cat_box::Game;
+    /// # let game = Game::new("asjdhfkajlsdh", 0, 0);
+    /// // ... in the game loop:
+    /// game.terminate();
+    /// ```
+    pub fn terminate(&self) {
+        self.stopped.set(true);
+    }
+}
+/// Plays an audio file given the path of file and plays it for y seconds
+/// ```
+/// play(String::from("/path/to/song.mp3", 15));
+/// ```
+pub fn play(x: String, y: u64) -> thread::JoinHandle<()> {
+        let wack = thread::spawn(move || {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             // Load a sound from a file, using a path relative to Cargo.toml
             let file = BufReader::new(File::open(x).unwrap());
@@ -775,15 +791,5 @@ impl Game {
             std::thread::sleep(std::time::Duration::from_secs(y));
 
         });
+        wack
     }
-    /// Stops the game loop. This method should be called inside the closure that you passed to [`Self::run()`].
-    /// ```
-    /// # use cat_box::Game;
-    /// # let game = Game::new("asjdhfkajlsdh", 0, 0);
-    /// // ... in the game loop:
-    /// game.terminate();
-    /// ```
-    pub fn terminate(&self) {
-        self.stopped.set(true);
-    }
-}
