@@ -114,6 +114,7 @@ use sdl2::{
 };
 use std::fs::File;
 use std::io::BufReader;
+#[cfg(feature = "audio")]
 use rodio::{self, Decoder, OutputStream, source::Source};
 use vec2::Vec2Int;
 
