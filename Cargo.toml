@@ -15,8 +15,9 @@ version = "0.35.2"
 features = ["image", "ttf"]
 
 [dependencies]
-rodio = "0.15.0"
+rodio = { version = "0.11.1", optional = true}
 
 [features]
 default = []
 static = ["sdl2/static-link", "sdl2/bundled"]
+audio = ["dep:rodio"]
