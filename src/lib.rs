@@ -90,6 +90,7 @@
     clippy::module_name_repetitions,
     clippy::missing_errors_doc
 )]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub mod physics;
 pub mod vec2;
@@ -107,9 +108,6 @@ use sdl2::{
     video::{Window, WindowBuildError, WindowContext},
     EventPump, IntegerOrSdlError,
 };
-use std::fs::File;
-use std::io::BufReader;
-use std::thread;
 use std::{
     cell::Cell,
     ops::{Deref, DerefMut},
@@ -782,13 +780,21 @@ impl Game {
     }
 }
 
+#[cfg(feature = "audio")]
+#[cfg_attr(docsrs, doc(cfg(feature = "audio")))]
 /// Plays an audio file given the path of file and plays it for y seconds
 /// ```no_run
 /// # use cat_box::play;
 /// play("/path/to/song.mp3", 15);
 /// ```
-#[cfg(feature = "audio")]
-pub fn play<P: AsRef<Path> + std::marker::Send + 'static>(x: P, y: u64) -> thread::JoinHandle<()> {
+pub fn play<P: AsRef<Path>>(path: P, time: u64) -> std::thread::JoinHandle<Result<()>> {
+    use std::fs::File;
+    use std::io::BufReader;
+    use std::thread;
+
+    // bypass the Send + 'static requirement
+    let p = path.as_ref();
+
     thread::spawn(move || {
         let (_stream, stream_handle) = OutputStream::try_default()?;
         // Load a sound from a file, using a path relative to Cargo.toml
