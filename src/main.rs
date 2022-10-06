@@ -1,6 +1,8 @@
 #![warn(clippy::pedantic)]
 
-use cat_box::{draw_text, get_keyboard_state, get_mouse_state, Game, Sprite, SpriteCollection, play};
+use cat_box::{
+    draw_text, get_keyboard_state, get_mouse_state, play, Game, Sprite, SpriteCollection,
+};
 use sdl2::keyboard::Scancode;
 
 fn main() {
