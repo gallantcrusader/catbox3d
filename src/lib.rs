@@ -165,6 +165,14 @@ error_from_format! {
     InitError
 }
 
+#[cfg(feature = "audio")]
+error_from_format! {
+    rodio::StreamError,
+    std::io::Error,
+    rodio::decoder::DecoderError,
+    rodio::PlayError
+}
+
 impl std::fmt::Display for CatboxError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
@@ -782,16 +790,18 @@ impl Game {
 #[cfg(feature = "audio")]
 pub fn play<P: AsRef<Path> + std::marker::Send + 'static>(x: P, y: u64) -> thread::JoinHandle<()> {
     thread::spawn(move || {
-        let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+        let (_stream, stream_handle) = OutputStream::try_default()?;
         // Load a sound from a file, using a path relative to Cargo.toml
-        let file = BufReader::new(File::open(x).unwrap());
+        let file = BufReader::new(File::open(p)?);
         // Decode that sound file into a source
-        let source = Decoder::new(file).unwrap();
+        let source = Decoder::new(file)?;
         // Play the sound directly on the device
-        stream_handle.play_raw(source.convert_samples()).unwrap();
+        stream_handle.play_raw(source.convert_samples())?;
 
         // The sound plays in a separate audio thread,
         // so we need to keep the main thread alive while it's playing.
-        std::thread::sleep(std::time::Duration::from_secs(y));
+        std::thread::sleep(std::time::Duration::from_secs(time));
+
+        Ok(())
     })
 }
