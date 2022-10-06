@@ -100,7 +100,7 @@ use std::{
     path::Path,
     slice::IterMut,
 };
-
+use std::{thread};
 use sdl2::{
     image::ImageRWops,
     mouse::MouseButton,
@@ -112,7 +112,10 @@ use sdl2::{
     video::{Window, WindowBuildError, WindowContext},
     EventPump, IntegerOrSdlError,
 };
-
+use std::fs::File;
+use std::io::BufReader;
+#[cfg(feature = "audio")]
+use rodio::{self, Decoder, OutputStream, source::Source};
 use vec2::Vec2Int;
 
 #[doc(no_inline)]
@@ -758,7 +761,7 @@ impl Game {
 
         Ok(())
     }
-
+    
     /// Stops the game loop. This method should be called inside the closure that you passed to [`Self::run()`].
     /// ```
     /// # use cat_box::Game;
@@ -770,3 +773,23 @@ impl Game {
         self.stopped.set(true);
     }
 }
+/// Plays an audio file given the path of file and plays it for y seconds
+/// ```
+/// play(String::from("/path/to/song.mp3", 15));
+/// ```
+#[cfg(feature = "audio")]
+pub fn play<P: AsRef<Path> + std::marker::Send + 'static>(x: P, y: u64) -> thread::JoinHandle<()> {
+        thread::spawn(move || {
+            let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+            // Load a sound from a file, using a path relative to Cargo.toml
+            let file = BufReader::new(File::open(x).unwrap());
+            // Decode that sound file into a source
+            let source = Decoder::new(file).unwrap();
+            // Play the sound directly on the device
+            stream_handle.play_raw(source.convert_samples()).unwrap();
+
+            // The sound plays in a separate audio thread,
+            // so we need to keep the main thread alive while it's playing.
+            std::thread::sleep(std::time::Duration::from_secs(y));
+        })
+    }
