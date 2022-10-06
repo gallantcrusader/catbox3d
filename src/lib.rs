@@ -787,18 +787,18 @@ impl Game {
 /// # use cat_box::play;
 /// play("/path/to/song.mp3", 15);
 /// ```
-pub fn play<P: AsRef<Path>>(path: P, time: u64) -> std::thread::JoinHandle<Result<()>> {
+pub fn play<P: AsRef<Path> + Send + 'static>(
+    path: P,
+    time: u64,
+) -> std::thread::JoinHandle<Result<()>> {
     use std::fs::File;
     use std::io::BufReader;
     use std::thread;
 
-    // bypass the Send + 'static requirement
-    let p = path.as_ref();
-
     thread::spawn(move || {
         let (_stream, stream_handle) = OutputStream::try_default()?;
         // Load a sound from a file, using a path relative to Cargo.toml
-        let file = BufReader::new(File::open(p)?);
+        let file = BufReader::new(File::open(path)?);
         // Decode that sound file into a source
         let source = Decoder::new(file)?;
         // Play the sound directly on the device
