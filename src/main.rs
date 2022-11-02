@@ -1,6 +1,6 @@
 #![warn(clippy::pedantic)]
 
-use cat_box::{draw_text, get_keyboard_state, get_mouse_state, Game, Sprite, SpriteCollection, play};
+use cat_box::{draw_text, get_keyboard_state, get_mouse_state, Game, Sprite, SpriteCollection};
 use sdl2::keyboard::Scancode;
 
 fn main() {
@@ -19,7 +19,8 @@ fn main() {
             coll.push(x);
         }
     }
-    play(String::from("output.mp3"), 120);
+    #[cfg(feature = "audio")]
+    cat_box::play("output.mp3", 120);
     game.run(|ctx| {
         i = (i + 1) % 255;
         ctx.set_background_colour(i as u8, 64, 255);
