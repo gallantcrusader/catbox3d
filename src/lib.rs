@@ -113,6 +113,7 @@ use std::{
     ops::{Deref, DerefMut},
     path::Path,
     slice::IterMut,
+    time::Instant,
 };
 use vec2::Vec2Int;
 
@@ -706,6 +707,7 @@ pub struct Game {
     pub width: u32,
     /// The height of the opened window
     pub height: u32,
+    pub time: Cell<Instant>,
     stopped: Cell<bool>,
 }
 
@@ -725,8 +727,16 @@ impl Game {
             title: title.to_string(),
             width,
             height,
+            time: Instant::now().into(),
             stopped: Cell::new(false),
         }
+    }
+    pub fn step(&self) -> u128 {
+        let a = self.time.get().elapsed().as_millis().clone();
+        a
+    }
+    pub fn t_reset(&self) {
+        self.time.set(Instant::now());
     }
 
     /// Runs the game. Note: this method blocks, as it uses an infinite loop.
