@@ -83,12 +83,11 @@ fn main() {
                 println!("Sprites collided! {}", i);
             }
 
-           
             game.t_reset();
         }
-         s2.draw(ctx).unwrap();
-            s.draw(ctx).unwrap();
-            coll.draw(ctx).unwrap();
+        s2.draw(ctx).unwrap();
+        s.draw(ctx).unwrap();
+        coll.draw(ctx).unwrap();
     })
     .unwrap();
 }
