@@ -731,10 +731,25 @@ impl Game {
             stopped: Cell::new(false),
         }
     }
+
+    ///Gets time elapsed since last timer reset in milliseconds
+    ///
+    ///Run this within the game loop
+    ///```
+    ///# game.run(|ctx| {
+    ///     if game.step() >= 1000
+    ///     {
+    ///         println!("A second has passed approx!");
+    ///         game.t_reset();
+    ///     }
+    ///}).unwrap();
+    ///```
     pub fn step(&self) -> u128 {
         let a = self.time.get().elapsed().as_millis().clone();
         a
     }
+
+    ///Resets in-game timer
     pub fn t_reset(&self) {
         self.time.set(Instant::now());
     }
