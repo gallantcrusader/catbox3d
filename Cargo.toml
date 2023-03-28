@@ -12,7 +12,7 @@ exclude = ["src/main.rs"]
 
 [dependencies.sdl2]
 version = "0.35.2"
-features = ["image", "ttf", "bundled"]
+features = ["image", "ttf"]
 
 [dependencies]
 rodio = { version = "0.15.0", optional = true}
