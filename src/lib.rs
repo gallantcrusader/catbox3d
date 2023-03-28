@@ -737,7 +737,7 @@ impl Game {
     ///Run this within the game loop
     ///```
     ///# use cat_box::Game;
-    ///let game = Game::new("wacky game", 1000, 1000);
+    ///# let game = Game::new("wacky game", 1000, 1000);
     ///# game.run(|ctx| {
     ///     if game.step() >= 1000
     ///     {
