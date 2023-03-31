@@ -1,10 +1,12 @@
 use std::env;
 use std::fs::File;
-use std::io::{copy, BufWriter};
+use std::io::{copy, BufWriter, Read};
 use std::path::Path;
 use std::path::PathBuf;
-use ureq::{Agent};
-use zip::ZipArchive;
+use ureq::{AgentBuilder};
+use zip::{ZipArchive, read::ZipFile};
+use std::sync::Arc;
+use native_tls;
 
 use tempfile::tempdir;
 
@@ -22,12 +24,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let temp_dir = tempdir()?;
         let temp_path = temp_dir.path();
         //returns zip files
-        let url_sdl = download_files("https://github.com/libsdl-org/SDL/releases/download/release-2.26.4/SDL2-devel-2.26.4-mingw.zip")?;
+        let url_sdl = download_files(temp_path.clone(),"https://github.com/libsdl-org/SDL/releases/download/release-2.26.4/SDL2-devel-2.26.4-mingw.zip")?;
 
-        let url_ttf = download_files("https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.20.2/SDL2_ttf-devel-2.20.2-mingw.zip")?;
+        let url_ttf = download_files(temp_path.clone(),"https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.20.2/SDL2_ttf-devel-2.20.2-mingw.zip")?;
 
-        let url_image = download_files("https://github.com/libsdl-org/SDL_image/releases/download/release-2.6.3/SDL2_image-devel-2.6.3-mingw.zip")?;
-        
+        let url_image = download_files(temp_path.clone(),"https://github.com/libsdl-org/SDL_image/releases/download/release-2.6.3/SDL2_image-devel-2.6.3-mingw.zip")?;
+
 
         //GETTING LIBRARY DIRECTORIES GIVEN THE BUILD TARGET
         let mut lib_dir = manifest_dir.clone();
@@ -47,18 +49,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             lib_dir.push("32");
             dll_dir.push("32");
         }
-        //could only error if dir already exists so no need to handle error lolz
+        //could only error if dir already exists so no need to handle error
         std::fs::create_dir_all(&lib_dir);
         std::fs::create_dir_all(&dll_dir);
 
         //NOW THAT WE HAVE THE OUTPUT DIRECTORIES, WE NEED TO EXTRACT THE ZIP FILES INTO THE
         //CORRECT DIRECTORIES
-        let mut zip_sdl2 = ZipArchive::new(url_sdl)?;
-        let mut zip_ttf = ZipArchive::new(url_ttf)?;
-        let mut zip_image = ZipArchive::new(url_image)?;
-        zip_ttf.extract(&temp_path)?;
-        zip_image.extract(&temp_path)?;
-        zip_sdl2.extract(&temp_path)?;
+        let zip_vec = vec![ZipArchive::new(&url_sdl)?,ZipArchive::new(&url_ttf)?,ZipArchive::new(&url_image)?];
+        let mut part = String::new();
+
+        let mut lib_folders:Vec<ZipFile> = Vec::new(); 
+        match state{
+            State::Six => {
+                part = "x86_64".to_string();
+            },
+            State::Three => {
+                part = "i686".to_string();
+            },
+        }
+        let map_thing = zip_vec.into_iter();
+
+        let mut lib_folder = lib_folders.get_mut(0).unwrap();
+        let mut vuf = vec![0; lib_folder.size() as usize];
+        let buf = vuf.as_mut_slice();
+        lib_folder.read(buf);
 
         //SEARCHES AND LINKS LIBRARIES WITH CARGO
         println!("cargo:rustc-link-search=all={}", lib_dir.display());
@@ -76,12 +90,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
+        url_image.sync_all()?;
+        url_ttf.sync_all()?;
+        url_sdl.sync_all()?;
     }
     Ok(())
 }
 
-pub fn download_files(url: &str) -> Result<File, Box<dyn std::error::Error>> {
-    let agent = Agent::new();
+pub fn download_files<P: AsRef<Path>>(
+    path: P,
+    url: &str
+) -> Result<File, Box<dyn std::error::Error>> {
+    let agent = AgentBuilder::new()
+        .tls_connector(Arc::new(native_tls::TlsConnector::new()?))
+        .build();
     let resp = agent.get(url).call()?;
 
     let content_disposition = resp.header("content-disposition").unwrap();
@@ -95,7 +117,9 @@ pub fn download_files(url: &str) -> Result<File, Box<dyn std::error::Error>> {
         .trim_matches('"');
 
     // Create a new File object to store the downloaded zip file
-    let file = File::create(file_name)?;
+    let mut path_buf = path.as_ref().to_path_buf();
+    path_buf.push(file_name);
+    let file = File::create(path_buf)?;
 
     // Use a BufWriter to efficiently write the contents of the response to the file
     let mut writer = BufWriter::new(file);
