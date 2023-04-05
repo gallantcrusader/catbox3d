@@ -1,78 +1,70 @@
-use std::env;
-use std::fs::File;
-use std::io::{copy, BufWriter, Read};
-use std::path::Path;
-use std::path::PathBuf;
-use ureq::{AgentBuilder};
-use zip::{ZipArchive, read::ZipFile};
-use std::sync::Arc;
 use native_tls;
+use std::env;
+use std::fs::{File, OpenOptions};
+use std::io::{copy, BufWriter};
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use ureq::AgentBuilder;
+use zip_extract::extract;
 
 use tempfile::tempdir;
 
-
-enum State {
-    Six,
-    Three,
-}
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let target = env::var("TARGET")?;
     if target.contains("pc-windows-gnu") {
         let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?);
-
-        //CREATING TEMP DIR FOR DOWNLOADS
-        let temp_dir = tempdir()?;
-        let temp_path = temp_dir.path();
-        //returns zip files
-        let url_sdl = download_files(temp_path.clone(),"https://github.com/libsdl-org/SDL/releases/download/release-2.26.4/SDL2-devel-2.26.4-mingw.zip")?;
-
-        let url_ttf = download_files(temp_path.clone(),"https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.20.2/SDL2_ttf-devel-2.20.2-mingw.zip")?;
-
-        let url_image = download_files(temp_path.clone(),"https://github.com/libsdl-org/SDL_image/releases/download/release-2.6.3/SDL2_image-devel-2.6.3-mingw.zip")?;
-
+        let temp = tempdir()?;
+        let temp_dir = temp.path();
 
         //GETTING LIBRARY DIRECTORIES GIVEN THE BUILD TARGET
         let mut lib_dir = manifest_dir.clone();
         let mut dll_dir = manifest_dir.clone();
-        
-        let mut state: State = State::Six;
+
+        let mut zip_extract = manifest_dir.clone();
+        zip_extract.push("gnu-mingw");
         lib_dir.push("gnu-mingw");
         dll_dir.push("gnu-mingw");
-        lib_dir.push("lib");
-        dll_dir.push("dll");
 
-        if target.contains("x86_64") {
-            lib_dir.push("64");
-            dll_dir.push("64");
-        } else {
-            state = State::Three;
-            lib_dir.push("32");
-            dll_dir.push("32");
-        }
-        //could only error if dir already exists so no need to handle error
-        std::fs::create_dir_all(&lib_dir);
-        std::fs::create_dir_all(&dll_dir);
-
-        //NOW THAT WE HAVE THE OUTPUT DIRECTORIES, WE NEED TO EXTRACT THE ZIP FILES INTO THE
-        //CORRECT DIRECTORIES
-        let zip_vec = vec![ZipArchive::new(&url_sdl)?,ZipArchive::new(&url_ttf)?,ZipArchive::new(&url_image)?];
         let mut part = String::new();
-
-        let mut lib_folders:Vec<ZipFile> = Vec::new(); 
-        match state{
-            State::Six => {
-                part = "x86_64".to_string();
-            },
-            State::Three => {
-                part = "i686".to_string();
-            },
+        if target.contains("x86_64") {
+            part += "x86_64-w64-mingw32";
+            lib_dir.push("x86_64-w64-mingw32");
+            dll_dir.push("x86_64-w64-mingw32");
+        } else {
+            part += "x86_64-w64-mingw32";
+            lib_dir.push("i686-w64-mingw32");
+            dll_dir.push("i686-w64-mingw32");
         }
-        let map_thing = zip_vec.into_iter();
+        lib_dir.push("lib");
+        dll_dir.push("bin");
+        println!("DEBUG: Managed Dirs!");
 
-        let mut lib_folder = lib_folders.get_mut(0).unwrap();
-        let mut vuf = vec![0; lib_folder.size() as usize];
-        let buf = vuf.as_mut_slice();
-        lib_folder.read(buf);
+        if !zip_extract.exists() {
+            std::fs::create_dir_all(&zip_extract)?;
+        }
+
+        println!("DEBUG: Created Dirs!");
+
+        if !lib_dir.exists() {
+            //NOW THAT WE HAVE THE OUTPUT DIRECTORIES, WE NEED TO EXTRACT THE ZIP FILES INTO THE
+            //CORRECT DIRECTORIES
+            //returns zip files
+            let url_sdl = download_files(temp_dir,"https://github.com/libsdl-org/SDL/releases/download/release-2.26.4/SDL2-devel-2.26.4-mingw.zip")?;
+            url_sdl.sync_all()?;
+            let url_ttf = download_files(temp_dir,"https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.20.2/SDL2_ttf-devel-2.20.2-mingw.zip")?;
+            url_ttf.sync_all()?;
+            let url_image = download_files(temp_dir,"https://github.com/libsdl-org/SDL_image/releases/download/release-2.6.3/SDL2_image-devel-2.6.3-mingw.zip")?;
+            url_image.sync_all()?;
+
+            println!("DEBUG: Downloaded Files!");
+
+            let zip_vec = vec![&url_sdl, &url_ttf, &url_image];
+            for file in zip_vec {
+                extract(file, &zip_extract, true)?;
+                println!("DEBUG: Extracted 'a' File");
+            }
+            temp.close()?;
+        }
 
         //SEARCHES AND LINKS LIBRARIES WITH CARGO
         println!("cargo:rustc-link-search=all={}", lib_dir.display());
@@ -90,17 +82,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
-        url_image.sync_all()?;
-        url_ttf.sync_all()?;
-        url_sdl.sync_all()?;
     }
     Ok(())
 }
 
-pub fn download_files<P: AsRef<Path>>(
-    path: P,
-    url: &str
-) -> Result<File, Box<dyn std::error::Error>> {
+pub fn download_files(path: &Path,url: &str) -> Result<File, Box<dyn std::error::Error>> {
     let agent = AgentBuilder::new()
         .tls_connector(Arc::new(native_tls::TlsConnector::new()?))
         .build();
@@ -117,9 +103,14 @@ pub fn download_files<P: AsRef<Path>>(
         .trim_matches('"');
 
     // Create a new File object to store the downloaded zip file
-    let mut path_buf = path.as_ref().to_path_buf();
-    path_buf.push(file_name);
-    let file = File::create(path_buf)?;
+
+    let mut path = path.to_path_buf();
+    path.push(&file_name);
+    let file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .open(&path)?;
 
     // Use a BufWriter to efficiently write the contents of the response to the file
     let mut writer = BufWriter::new(file);
