@@ -90,11 +90,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-
+/// Downloads files and returns the file if it was able to be downloaded
 /// # Panics
 /// panics if no response or response lacks "content-disposition" header
 /// # Errors
-/// errors if literally anything happens that could be bad
+/// errors if 
+///  A: unable to get `TlsConnector`
+///  B: A File is unable to be create 
+///  C: or if the reader is unable to be copied into the writer
 pub fn download_files(path: &Path,url: &str) -> Result<File, Box<dyn std::error::Error>> {
     let agent = AgentBuilder::new()
         .tls_connector(Arc::new(native_tls::TlsConnector::new()?))
