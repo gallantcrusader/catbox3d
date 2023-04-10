@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use std::env;
 use std::fs::{File, OpenOptions};
 use std::io::{copy, BufWriter};
@@ -74,7 +76,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut new_file_path = manifest_dir.clone();
             if let Some(file_name) = file_name_result {
                 let file_name = file_name.to_str().unwrap();
-                if file_name.ends_with(".dll") {
+                if  Path::new(file_name)
+                    .extension()
+                    .map_or(false, |ext| ext.eq_ignore_ascii_case("dll"))                        
+                {
                     new_file_path.push(file_name);
                     std::fs::copy(&entry_path, new_file_path.as_path())
                         .expect("Can't copy from DLL dir");
@@ -85,6 +90,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+
+/// # Panics
+/// panics if no response or response lacks "content-disposition" header
+/// # Errors
+/// errors if literally anything happens that could be bad
 pub fn download_files(path: &Path,url: &str) -> Result<File, Box<dyn std::error::Error>> {
     let agent = AgentBuilder::new()
         .tls_connector(Arc::new(native_tls::TlsConnector::new()?))
