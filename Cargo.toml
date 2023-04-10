@@ -27,3 +27,6 @@ tempfile = "3.5.0"
 default = ["audio"]
 static = ["sdl2/static-link", "sdl2/bundled"]
 audio = ["dep:rodio"]
+
+[[example]]
+name = "example_1"
