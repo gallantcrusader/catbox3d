@@ -747,8 +747,8 @@ impl Game {
     ///}).unwrap();
     ///```
     pub fn step(&self) -> u128 {
-        let a = self.time.get().elapsed().as_millis().clone();
-        a
+        self.time.get().elapsed().as_millis()
+        
     }
 
     ///Resets in-game timer

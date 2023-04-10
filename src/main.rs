@@ -24,11 +24,11 @@ fn main() {
     game.run(|ctx| {
         if game.step() >= 1 {
             i = (i + 1) % 255;
-            ctx.set_background_colour(i as u8, 64, 255);
+            ctx.set_background_colour(i, 64, 255);
 
             draw_text(
                 ctx,
-                format!("i is {}", i),
+                format!("i is {i}"),
                 "MesloLGS NF Regular.ttf",
                 72,
                 (300, 300),
@@ -80,7 +80,7 @@ fn main() {
             }
 
             if !cat_box::physics::check_for_collision_with_collection(&s2, &coll).is_empty() {
-                println!("Sprites collided! {}", i);
+                println!("Sprites collided! {i}");
             }
 
             game.t_reset();

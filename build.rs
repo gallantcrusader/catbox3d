@@ -1,4 +1,3 @@
-use native_tls;
 use std::env;
 use std::fs::{File, OpenOptions};
 use std::io::{copy, BufWriter};
@@ -97,7 +96,7 @@ pub fn download_files(path: &Path,url: &str) -> Result<File, Box<dyn std::error:
         .split("; ")
         .find(|s| s.starts_with("filename="))
         .unwrap()
-        .split("=")
+        .split('=')
         .nth(1)
         .unwrap()
         .trim_matches('"');
@@ -105,7 +104,7 @@ pub fn download_files(path: &Path,url: &str) -> Result<File, Box<dyn std::error:
     // Create a new File object to store the downloaded zip file
 
     let mut path = path.to_path_buf();
-    path.push(&file_name);
+    path.push(file_name);
     let file = OpenOptions::new()
         .read(true)
         .write(true)
