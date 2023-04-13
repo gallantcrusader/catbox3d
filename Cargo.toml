@@ -1,6 +1,6 @@
 [package]
 name = "cat-box"
-version = "22.6.21"
+version = "0.1.9"
 edition = "2018"
 license = "MIT"
 description = "Work in progress game engine, inspired by arcade"
@@ -15,18 +15,23 @@ version = "0.35.2"
 features = ["image", "ttf"]
 
 [dependencies]
-rodio = { version = "0.15.0", optional = true}
+rodio = { version = "0.17.1", optional = true}
+vulkano = { version = "0.32.3", optional = true }
+gl = { version = "0.14.0", optional = true }
 
 [build-dependencies]
 ureq = {version = "2.6.2", features = ["native-tls"]}
 native-tls = "0.2.7"
 zip-extract = "0.1.2"
-tempfile = "3.5.0"
+tempfile = "3.4.0"
 
 [features]
-default = ["audio"]
+default = ["audio", "vulkan"]
 static = ["sdl2/static-link", "sdl2/bundled"]
 audio = ["dep:rodio"]
+vulkan = ["dep:vulkano"]
+opengl = ["dep:gl"]
+
 
 [[example]]
 name = "example_1"

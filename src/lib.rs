@@ -769,12 +769,17 @@ impl Game {
         let sdl_context = sdl2::init()?;
         let video_subsystem = sdl_context.video()?;
 
-        let window = video_subsystem
-            .window(&self.title, self.width, self.height)
-            .position_centered()
-            // .opengl()
-            .vulkan()
-            .build()?;
+        let mut window_build = video_subsystem
+            .window(&self.title, self.width, self.height);
+
+        //init window
+        let window = if cfg!(feature = "opengl"){
+            window_build.opengl().build()?
+        } else if cfg!(feature = "vulkan") {
+            window_build.vulkan().build()?
+        } else {
+            window_build.build()?
+        };
 
         let canvas = window.into_canvas().build()?;
         let s = sdl2::ttf::init()?;
