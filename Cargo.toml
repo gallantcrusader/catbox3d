@@ -6,7 +6,6 @@ license = "MIT"
 description = "Work in progress game engine, inspired by arcade"
 repository = "https://git.karx.xyz/karx/catbox"
 readme = "README.md"
-exclude = ["src/main.rs"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -26,7 +25,7 @@ zip-extract = "0.1.2"
 tempfile = "3.4.0"
 
 [features]
-default = ["audio", "vulkan"]
+default = ["audio"]
 static = ["sdl2/static-link", "sdl2/bundled"]
 audio = ["dep:rodio"]
 vulkan = ["dep:vulkano"]
