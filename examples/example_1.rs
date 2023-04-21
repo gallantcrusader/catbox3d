@@ -22,6 +22,11 @@ fn main() {
     #[cfg(feature = "audio")]
     cat_box::play("output.mp3", 120);
     game.run(|ctx| {
+        let (_, _, _) = ctx.inner();
+
+        //let win = b.window_mut();
+        /* let instance_schtuff = win.vulkan_instance_extensions().unwrap(); */
+
         if game.step() >= 1 {
             i = (i + 1) % 255;
             ctx.set_background_colour(i, 64, 255);

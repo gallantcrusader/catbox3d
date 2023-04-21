@@ -92,8 +92,9 @@
 )]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
+pub mod math;
 pub mod physics;
-pub mod vec2;
+pub mod space;
 
 #[cfg(feature = "audio")]
 use rodio::{self, source::Source, Decoder, OutputStream};
@@ -115,8 +116,8 @@ use std::{
     slice::IterMut,
     time::Instant,
 };
-use vec2::Vec2Int;
 
+use math::vec2::Vec2Int;
 #[doc(no_inline)]
 pub use sdl2::{self, event::Event, keyboard::Scancode, pixels::Color};
 
@@ -748,7 +749,6 @@ impl Game {
     ///```
     pub fn step(&self) -> u128 {
         self.time.get().elapsed().as_millis()
-        
     }
 
     ///Resets in-game timer
@@ -769,11 +769,10 @@ impl Game {
         let sdl_context = sdl2::init()?;
         let video_subsystem = sdl_context.video()?;
 
-        let mut window_build = video_subsystem
-            .window(&self.title, self.width, self.height);
+        let mut window_build = video_subsystem.window(&self.title, self.width, self.height);
 
         //init window
-        let window = if cfg!(feature = "opengl"){
+        let window = if cfg!(feature = "opengl") {
             window_build.opengl().build()?
         } else if cfg!(feature = "vulkan") {
             window_build.vulkan().build()?
@@ -817,7 +816,7 @@ impl Game {
 /// Plays an audio file given the path of file and plays it for y seconds
 /// ```no_run
 /// # use cat_box::play;
-/// play("/path/to/song.mp3", 15);
+/// play("/path/to/song.mp71", 15);
 /// ```
 pub fn play<P: AsRef<Path> + Send + 'static>(
     path: P,

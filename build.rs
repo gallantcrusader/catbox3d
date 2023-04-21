@@ -76,9 +76,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut new_file_path = manifest_dir.clone();
             if let Some(file_name) = file_name_result {
                 let file_name = file_name.to_str().unwrap();
-                if  Path::new(file_name)
+                if Path::new(file_name)
                     .extension()
-                    .map_or(false, |ext| ext.eq_ignore_ascii_case("dll"))                        
+                    .map_or(false, |ext| ext.eq_ignore_ascii_case("dll"))
                 {
                     new_file_path.push(file_name);
                     std::fs::copy(&entry_path, new_file_path.as_path())
@@ -94,11 +94,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// # Panics
 /// panics if no response or response lacks "content-disposition" header
 /// # Errors
-/// errors if 
+/// errors if
 ///  A: unable to get `TlsConnector`
-///  B: A File is unable to be create 
+///  B: A File is unable to be create
 ///  C: or if the reader is unable to be copied into the writer
-pub fn download_files(path: &Path,url: &str) -> Result<File, Box<dyn std::error::Error>> {
+pub fn download_files(path: &Path, url: &str) -> Result<File, Box<dyn std::error::Error>> {
     let agent = AgentBuilder::new()
         .tls_connector(Arc::new(native_tls::TlsConnector::new()?))
         .build();
