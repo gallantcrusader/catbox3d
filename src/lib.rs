@@ -94,7 +94,6 @@
 
 pub mod math;
 pub mod physics;
-pub mod space;
 
 #[cfg(feature = "audio")]
 use rodio::{self, source::Source, Decoder, OutputStream};
