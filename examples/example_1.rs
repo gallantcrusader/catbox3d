@@ -84,7 +84,7 @@ fn main() {
                 }
             }
 
-            if !cat_box::physics::check_for_collision_with_collection(&s2, &coll).is_empty() {
+            if !cat_box::check_for_collision_with_collection(&s2, &coll).is_empty() {
                 println!("Sprites collided! {i}");
             }
 
