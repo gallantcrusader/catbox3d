@@ -103,6 +103,30 @@ impl Sprite {
         self.rect.set_x(new_x);
         self.rect.set_y(new_y);
     }
+    
+    ///translates up by given amount
+    pub fn up(&mut self, vel: i32) {
+        self.translate(Vec2Int::new(0, vel));
+
+    }
+
+    /// translates down by given amount
+    pub fn down(&mut self, vel: i32) {
+        self.translate(Vec2Int::new(0, vel * -1));
+
+    }
+
+    /// translates left by given amount
+    pub fn left(&mut self, vel: i32) {
+        self.translate(Vec2Int::new(vel * -1, 0));
+
+    }
+
+    ///translates right by given amount
+    pub fn right(&mut self, vel: i32) {
+        self.translate(Vec2Int::new(vel, 0));
+
+    }
 
     /// Reposition the center of the sprite in the form of (x, y)
     ///
