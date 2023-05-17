@@ -25,7 +25,7 @@ zip-extract = "0.1.2"
 tempfile = "3.4.0"
 
 [features]
-default = ["audio"]
+default = ["audio", "sdl2/gfx"]
 static = ["sdl2/static-link", "sdl2/bundled"]
 audio = ["dep:rodio"]
 vulkan = ["dep:vulkano"]

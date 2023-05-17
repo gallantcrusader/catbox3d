@@ -47,6 +47,28 @@ impl Sprite {
         })
     }
 
+    pub fn rect_sprite<C: sdl2::gfx::primitives::ToColor>(x: i32, y: i32,width: u32, height: u32, color: C) -> Result<Self> {
+        let (rmask,gmask,bmask,amask) = color.as_rgba();
+
+        let mask = sdl2::pixels::PixelMasks {
+            bpp: 32,
+            rmask: rmask.into(),
+            gmask: gmask.into(),
+            bmask: bmask.into(),
+            amask: amask.into()
+        };
+
+        let surf = Surface::from_pixelmasks(width, height, mask).unwrap();
+        surf.rect().set_y(y);
+        surf.rect().set_x(x);
+
+        Ok(Self{
+            rect: surf.rect(),
+            surf,
+            angle: 0.0,
+        })
+    }
+
     /// Create a new sprite using a slice of bytes, like what is returned from `include_bytes!`
     ///
     /// Don't forget to call [`draw()`](Self::draw()) after this.
