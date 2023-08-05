@@ -331,7 +331,7 @@ pub fn draw_text<S: AsRef<str>, I: Into<Vec2Int>>(
 /// Representation of the mouse state.
 pub struct MouseRepr {
     pub buttons: Vec<MouseButton>,
-    pub pos: Vec2Int,
+    pub pos: (i32,i32),
 }
 
 /// Representation of the keyboard state.
@@ -354,7 +354,7 @@ pub fn get_mouse_state(ctx: &mut Context) -> MouseRepr {
 
     MouseRepr {
         buttons: mouse.pressed_mouse_buttons().collect(),
-        pos: Vec2Int::new(mouse.x(), mouse.y()),
+        pos: (mouse.x(),mouse.y()),
     }
 }
 
