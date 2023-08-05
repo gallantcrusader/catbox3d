@@ -94,8 +94,9 @@
 
 pub mod math;
 pub mod sprite;
-pub use sprite::sprite::{Sprite,SpriteCollection};
+use sdl2::sys::SDL_Window;
 pub use sprite::physics::*;
+pub use sprite::sprite::{Sprite, SpriteCollection};
 
 #[cfg(feature = "audio")]
 use rodio::{self, source::Source, Decoder, OutputStream};
@@ -107,11 +108,7 @@ use sdl2::{
     video::{Window, WindowBuildError, WindowContext},
     EventPump, IntegerOrSdlError,
 };
-use std::{
-    cell::Cell,
-    path::Path,
-    time::Instant,
-};
+use std::{cell::Cell, path::Path, time::Instant};
 
 use math::vec2::Vec2Int;
 #[doc(no_inline)]
@@ -334,7 +331,7 @@ pub fn draw_text<S: AsRef<str>, I: Into<Vec2Int>>(
 /// Representation of the mouse state.
 pub struct MouseRepr {
     pub buttons: Vec<MouseButton>,
-    pub pos: Vec2Int
+    pub pos: Vec2Int,
 }
 
 /// Representation of the keyboard state.
@@ -357,7 +354,7 @@ pub fn get_mouse_state(ctx: &mut Context) -> MouseRepr {
 
     MouseRepr {
         buttons: mouse.pressed_mouse_buttons().collect(),
-        pos: Vec2Int::new(mouse.x(), mouse.y()) 
+        pos: Vec2Int::new(mouse.x(), mouse.y()),
     }
 }
 
@@ -478,6 +475,38 @@ impl Game {
         }
 
         Ok(())
+    }
+
+    /// Runs the game from a raw pointer to a Window (blocks)
+    pub unsafe fn run_from_ll<F: FnMut(&mut Context)>(
+        &self,
+        win: *mut SDL_Window,
+        mut func: F,
+    ) -> Result<()> {
+        unsafe {
+            let sdl_context = sdl2::init()?;
+            let video_subsystem = sdl_context.video()?;
+
+            let window = Window::from_ll(video_subsystem, win);
+
+            let canvas = window.into_canvas().build()?;
+            let s = sdl2::ttf::init()?;
+
+            let event_pump = sdl_context.event_pump()?;
+
+            let mut ctx = Context::new(canvas, event_pump, s);
+
+            loop {
+                if self.stopped.get() || ctx.check_for_quit() {
+                    break;
+                }
+                ctx.clear();
+                func(&mut ctx);
+                ctx.update();
+            }
+
+            Ok(())
+        }
     }
 
     /// Stops the game loop. This method should be called inside the closure that you passed to [`Self::run()`].
