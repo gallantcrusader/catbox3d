@@ -94,6 +94,7 @@
 
 pub mod math;
 pub mod sprite;
+use sdl2::VideoSubsystem;
 use sdl2::sys::SDL_Window;
 pub use sprite::physics::*;
 pub use sprite::sprite::{Sprite, SpriteCollection};
@@ -482,15 +483,15 @@ impl Game {
     /// Runs the game from a raw pointer to a Window (blocks)
     pub unsafe fn run_from_ll<F: FnMut(&mut Context)>(
         &self,
-        win: *mut SDL_Window,
+        sdl_context: sdl2::Sdl,
+        _video_subsystem: VideoSubsystem,
+        window: sdl2::video::Window,
         mut func: F,
     ) -> Result<()> {
         unsafe {
-            let sdl_context = sdl2::init()?;
-            let video_subsystem = sdl_context.video()?;
+            
 
-            let window = Window::from_ll(video_subsystem, win);
-
+            
             let canvas = window.into_canvas().build()?;
             let s = sdl2::ttf::init()?;
 
