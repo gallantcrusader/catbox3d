@@ -1,9 +1,4 @@
-use sdl2::{
-    image::ImageRWops,
-    rect::Rect,
-    rwops::RWops,
-    surface::Surface,
-};
+use sdl2::{image::ImageRWops, rect::Rect, rwops::RWops, surface::Surface};
 use std::{
     ops::{Deref, DerefMut},
     path::Path,
@@ -12,11 +7,7 @@ use std::{
 
 use crate::math::vec2::Vec2Int;
 
-use crate::{
-    Context,
-    Result
-};
-
+use crate::{Context, Result};
 
 /// Representation of a sprite.
 pub struct Sprite {
@@ -47,22 +38,28 @@ impl Sprite {
         })
     }
 
-    pub fn rect_sprite<C: sdl2::gfx::primitives::ToColor>(x: i32, y: i32,width: u32, height: u32, color: C) -> Result<Self> {
-        let (rmask,gmask,bmask,amask) = color.as_rgba();
+    pub fn rect_sprite<C: sdl2::gfx::primitives::ToColor>(
+        x: i32,
+        y: i32,
+        width: u32,
+        height: u32,
+        color: C,
+    ) -> Result<Self> {
+        let (rmask, gmask, bmask, amask) = color.as_rgba();
 
         let mask = sdl2::pixels::PixelMasks {
             bpp: 32,
             rmask: rmask.into(),
             gmask: gmask.into(),
             bmask: bmask.into(),
-            amask: amask.into()
+            amask: amask.into(),
         };
 
         let surf = Surface::from_pixelmasks(width, height, mask).unwrap();
         surf.rect().set_y(y);
         surf.rect().set_x(x);
 
-        Ok(Self{
+        Ok(Self {
             rect: surf.rect(),
             surf,
             angle: 0.0,
@@ -125,29 +122,25 @@ impl Sprite {
         self.rect.set_x(new_x);
         self.rect.set_y(new_y);
     }
-    
+
     ///translates up by given amount
     pub fn up(&mut self, vel: i32) {
         self.translate(Vec2Int::new(0, vel));
-
     }
 
     /// translates down by given amount
     pub fn down(&mut self, vel: i32) {
         self.translate(Vec2Int::new(0, vel * -1));
-
     }
 
     /// translates left by given amount
     pub fn left(&mut self, vel: i32) {
         self.translate(Vec2Int::new(vel * -1, 0));
-
     }
 
     ///translates right by given amount
     pub fn right(&mut self, vel: i32) {
         self.translate(Vec2Int::new(vel, 0));
-
     }
 
     /// Reposition the center of the sprite in the form of (x, y)
