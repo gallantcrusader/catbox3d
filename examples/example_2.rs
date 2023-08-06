@@ -5,6 +5,7 @@ use cat_box::{
     SpriteCollection,
 };
 use sdl2::keyboard::Scancode;
+use sdl2::sys as sdl2_sys;
 
 use std::ffi::c_void;
 use x11::*;
