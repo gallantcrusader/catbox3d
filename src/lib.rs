@@ -119,7 +119,7 @@ pub use sdl2::{self, event::Event, keyboard::Scancode, pixels::Color};
 ///
 /// Temporary workaround for [Rust RFC 2407](https://github.com/rust-lang/rfcs/issues/2407)
 #[macro_export]
-macro_rules! cloned {
+macro_rules! cloned {}
     ($thing:ident => $e:expr) => {
         let $thing = $thing.clone();
         $e
