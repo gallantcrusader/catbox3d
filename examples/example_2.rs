@@ -1,13 +1,16 @@
 #![warn(clippy::pedantic)]
 
 use cat_box::{
-    draw_text, get_keyboard_state, get_mouse_state, sdl2::sys::SDL_CreateWindowFrom, Game, Sprite,
-    SpriteCollection,
+    draw_text, get_keyboard_state, get_mouse_state,
+    objects::sprite::{Sprite, SpriteCollection},
+    sdl2::sys::SDL_CreateWindowFrom,
+    Game,
 };
 use sdl2::keyboard::Scancode;
 use sdl2::sys as sdl2_sys;
 
 use std::ffi::c_void;
+
 use x11::*;
 
 fn main() {
@@ -27,16 +30,15 @@ fn main() {
                 coll.push(x);
             }
         }
-        
+
         let contx = sdl2::init().unwrap();
         let vsys = contx.video().unwrap();
 
         let x11d = sdl2_sys::XOpenDisplay(std::ptr::null());
         let x11w = sdl2_sys::XRootWindow(x11d, sdl2_sys::XDefaultScreen(x11d));
         let win = SDL_CreateWindowFrom(x11w as *mut c_void);
-        
-        let window = sdl2::video::Window::from_ll(vsys.clone(),win);
 
+        let window = sdl2::video::Window::from_ll(vsys.clone(), win);
 
         game.run_from_ll(contx, vsys, window, |ctx| {
             let (_, _, _) = ctx.inner();
@@ -114,4 +116,3 @@ fn main() {
         .unwrap();
     }
 }
-

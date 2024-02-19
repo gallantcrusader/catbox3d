@@ -10,7 +10,7 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies.sdl2]
-version = "0.35.2"
+version = "0.35.1"
 features = ["image", "ttf"]
 
 [target.'cfg(unix)'.dependencies]
@@ -31,7 +31,7 @@ tempfile = "3.4.0"
 
 [features]
 default = ["audio", "sdl2/gfx"]
-static = ["sdl2/static-link", "sdl2/bundled"]
+#static = ["sdl2/static-link", "sdl2/bundled"]
 audio = ["dep:rodio"]
 vulkan = ["dep:vulkano"]
 opengl = ["dep:gl"]

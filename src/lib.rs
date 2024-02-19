@@ -93,11 +93,10 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub mod math;
-pub mod sprite;
+pub mod objects;
+
+pub use objects::physics::*;
 use sdl2::VideoSubsystem;
-use sdl2::sys::SDL_Window;
-pub use sprite::physics::*;
-pub use sprite::sprite::{Sprite, SpriteCollection};
 
 #[cfg(feature = "audio")]
 use rodio::{self, source::Source, Decoder, OutputStream};
@@ -119,7 +118,7 @@ pub use sdl2::{self, event::Event, keyboard::Scancode, pixels::Color};
 ///
 /// Temporary workaround for [Rust RFC 2407](https://github.com/rust-lang/rfcs/issues/2407)
 #[macro_export]
-macro_rules! cloned {}
+macro_rules! cloned {
     ($thing:ident => $e:expr) => {
         let $thing = $thing.clone();
         $e
@@ -141,7 +140,6 @@ macro_rules! error_from_format {
         )+
     };
 }
-
 #[derive(Clone, Debug)]
 pub struct CatboxError(String);
 
@@ -333,7 +331,38 @@ pub fn draw_text<S: AsRef<str>, I: Into<Vec2Int>>(
 pub struct MouseRepr {
     pub buttons: Vec<MouseButton>,
     pub x: i32,
-    pub y: i32
+    pub y: i32,
+}
+
+impl MouseRepr {
+    pub fn coll_with_sprite(&self, s: &crate::objects::sprite::Sprite) -> bool {
+        let rad = std::cmp::max(s.rect.width(), s.rect.height()) as i32;
+
+        let diff_x = s.position().x - self.x;
+        let mut diff2 = diff_x * diff_x;
+
+        if diff2 > rad * rad {
+            return false;
+        }
+
+        let diff_y = s.position().y - self.y;
+        diff2 = diff_y * diff_y;
+
+        if diff2 > rad * rad {
+            return false;
+        }
+
+        let bluh = Rect::new(self.x, self.y, 1, 1);
+        s.rect.has_intersection(bluh)
+    }
+
+    pub fn empty() -> MouseRepr {
+        MouseRepr {
+            buttons: Vec::new(),
+            x: 0,
+            y: 0,
+        }
+    }
 }
 
 /// Representation of the keyboard state.
@@ -357,7 +386,7 @@ pub fn get_mouse_state(ctx: &mut Context) -> MouseRepr {
     MouseRepr {
         buttons: mouse.pressed_mouse_buttons().collect(),
         x: mouse.x(),
-        y: mouse.y()
+        y: mouse.y(),
     }
 }
 
@@ -488,28 +517,23 @@ impl Game {
         window: sdl2::video::Window,
         mut func: F,
     ) -> Result<()> {
-        unsafe {
-            
+        let canvas = window.into_canvas().build()?;
+        let s = sdl2::ttf::init()?;
 
-            
-            let canvas = window.into_canvas().build()?;
-            let s = sdl2::ttf::init()?;
+        let event_pump = sdl_context.event_pump()?;
 
-            let event_pump = sdl_context.event_pump()?;
+        let mut ctx = Context::new(canvas, event_pump, s);
 
-            let mut ctx = Context::new(canvas, event_pump, s);
-
-            loop {
-                if self.stopped.get() || ctx.check_for_quit() {
-                    break;
-                }
-                ctx.clear();
-                func(&mut ctx);
-                ctx.update();
+        loop {
+            if self.stopped.get() || ctx.check_for_quit() {
+                break;
             }
-
-            Ok(())
+            ctx.clear();
+            func(&mut ctx);
+            ctx.update();
         }
+
+        Ok(())
     }
 
     /// Stops the game loop. This method should be called inside the closure that you passed to [`Self::run()`].

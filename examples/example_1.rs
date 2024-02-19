@@ -1,7 +1,16 @@
 #![warn(clippy::pedantic)]
 
-use cat_box::{draw_text, get_keyboard_state, get_mouse_state, Game, Sprite, SpriteCollection};
+use cat_box::{
+    draw_text, get_keyboard_state, get_mouse_state,
+    objects::button::Button,
+    objects::sprite::{Sprite, SpriteCollection},
+    Game, MouseRepr,
+};
 use sdl2::keyboard::Scancode;
+
+fn test() {
+    println!("Holy W!");
+}
 
 fn main() {
     let game = Game::new("catbox demo", 1000, 800);
@@ -9,16 +18,18 @@ fn main() {
     let mut i = 0u8;
     let mut s = Sprite::new("duck.png", 500, 400).unwrap();
     let mut s2 = Sprite::new("duck.png", 400, 500).unwrap();
+    let mut b = Button::new("duck.png", 100, 200).unwrap();
 
     let bytes = include_bytes!("../duck.png");
 
     let mut coll = SpriteCollection::new();
-    for n in 0..10 {
-        for o in 0..8 {
+    for n in 0..3 {
+        for o in 0..3 {
             let x = Sprite::from_bytes(bytes, n * 100, o * 100).unwrap();
             coll.push(x);
         }
     }
+    let mut m = MouseRepr::empty();
     #[cfg(feature = "audio")]
     cat_box::play("output.mp3", 120);
     game.run(|ctx| {
@@ -27,25 +38,13 @@ fn main() {
         //let win = b.window_mut();
         /* let instance_schtuff = win.vulkan_instance_extensions().unwrap(); */
 
-        if game.step() >= 1 {
+        if game.step() >= 10 {
             i = (i + 1) % 255;
             ctx.set_background_colour(i, 64, 255);
 
-            draw_text(
-                ctx,
-                format!("i is {i}"),
-                "MesloLGS NF Regular.ttf",
-                72,
-                (300, 300),
-                cat_box::TextMode::Shaded {
-                    foreground: (255, 255, 255),
-                    background: (0, 0, 0),
-                },
-            )
-            .unwrap();
-
+            m = get_mouse_state(ctx);
+            b.clicked(&m, test);
             let (start_x, start_y) = s.position().into();
-            let m = get_mouse_state(ctx);
             let x_diff = m.x - start_x;
             let y_diff = m.y - start_y;
 
@@ -87,12 +86,28 @@ fn main() {
             if !cat_box::check_for_collision_with_collection(&s2, &coll).is_empty() {
                 println!("Sprites collided! {i}");
             }
+            if m.coll_with_sprite(&s) {
+                println!("MOUSE HAS COLLIDED");
+            }
 
             game.t_reset();
         }
+        draw_text(
+            ctx,
+            format!("i is {i}"),
+            "MesloLGS NF Regular.ttf",
+            72,
+            (300, 300),
+            cat_box::TextMode::Shaded {
+                foreground: (255, 255, 255),
+                background: (0, 0, 0),
+            },
+        )
+        .unwrap();
         s2.draw(ctx).unwrap();
         s.draw(ctx).unwrap();
         coll.draw(ctx).unwrap();
+        b.draw(ctx).unwrap();
     })
     .unwrap();
 }
