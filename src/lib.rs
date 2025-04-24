@@ -415,9 +415,9 @@ pub struct Game {
     /// The title that the window displays.
     pub title: String,
     /// The width of the opened window
-    pub width: u32,
+    pub width: u16,
     /// The height of the opened window
-    pub height: u32,
+    pub height: u16,
     pub time: Cell<Instant>,
     stopped: Cell<bool>,
 }
@@ -433,7 +433,7 @@ impl Game {
     /// ```
     ///
     #[must_use]
-    pub fn new(title: &str, width: u32, height: u32) -> Self {
+    pub fn new(title: &str, width: u16, height: u16) -> Self {
         Self {
             title: title.to_string(),
             width,
@@ -479,7 +479,8 @@ impl Game {
         let sdl_context = sdl2::init()?;
         let video_subsystem = sdl_context.video()?;
 
-        let mut window_build = video_subsystem.window(&self.title, self.width, self.height);
+        let mut window_build =
+            video_subsystem.window(&self.title, self.width as u32, self.height as u32);
 
         //init window
         let window = if cfg!(feature = "opengl") {
