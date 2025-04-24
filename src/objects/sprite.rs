@@ -1,9 +1,10 @@
+use image::{codecs::png::PngEncoder, imageops::FilterType, ImageReader};
 use sdl2::{
     image::ImageRWops, /*     pixels::{Color, PixelFormatEnum}, */
     rect::Rect, rwops::RWops, surface::Surface,
 };
 use std::{
-    io::Read,
+    io::{Cursor, Read},
     ops::{Deref, DerefMut},
     path::Path,
     slice::IterMut,
@@ -14,14 +15,14 @@ use crate::math::vec2::Vec2Int;
 use crate::{Context, Result};
 
 /// Representation of a sprite.
-pub struct Sprite<'a> {
+pub struct Sprite {
     pub rect: Rect,
     surf: Surface<'static>,
     angle: f64,
-    bytes: &'a [u8],
+    bytes: Vec<u8>,
 }
 
-impl Sprite<'a> {
+impl Sprite {
     /// Create a new Sprite. The `path` is relative to the current directory while running.
     ///
     /// Don't forget to call [`draw()`](Self::draw()) after this.
@@ -31,10 +32,12 @@ impl Sprite<'a> {
     /// ```
     pub fn new<P: AsRef<Path>>(path: P, x: i32, y: i32) -> Result<Self> {
         let mut buf: Vec<u8> = Vec::new();
-        let mut f = std::fs::File::open(path).unwrap();
-        f.read_to_end(&mut buf);
+        let mut f = std::fs::File::open(path)?;
+        f.read_to_end(&mut buf)?;
         /* let ops = RWops::from_file(path, "r")?; */
+        // let sec_buf = buf.clone();
         let ops = RWops::from_bytes(buf.as_ref())?;
+        let buf: Vec<u8> = <Vec<u8> as AsRef<[u8]>>::as_ref(&buf).to_owned();
         let surf = ops.load()?;
 
         let srect = surf.rect();
@@ -44,7 +47,7 @@ impl Sprite<'a> {
             rect: dest_rect,
             surf,
             angle: 0.0,
-            bytes: &buf,
+            bytes: buf,
         })
     }
 
@@ -59,7 +62,7 @@ impl Sprite<'a> {
     pub fn from_bytes<B: AsRef<[u8]>>(bytes: B, x: i32, y: i32) -> Result<Self> {
         let ops = RWops::from_bytes(bytes.as_ref())?;
         let surf = ops.load()?;
-
+        let bytes: Vec<u8> = bytes.as_ref().to_vec();
         let srect = surf.rect();
         let dest_rect: Rect = Rect::from_center((x, y), srect.width(), srect.height());
 
@@ -106,7 +109,21 @@ impl Sprite<'a> {
         self.rect.set_y(new_y);
     }
 
-    pub fn resize(&mut self, nwidth: u32, nheight: u32) {}
+    pub fn resize(&self, nwidth: u32, nheight: u32) -> Result<Self> {
+        let mut thing = ImageReader::new(Cursor::new(self.bytes.clone()))
+            .with_guessed_format()?
+            .decode()
+            .unwrap();
+
+        thing = thing.resize_exact(nwidth, nheight, FilterType::Triangle);
+        let mut new_buf: Vec<u8> = Vec::new();
+        let encoder = PngEncoder::new(&mut new_buf);
+        thing.write_with_encoder(encoder).unwrap();
+
+        let sp = Self::from_bytes(new_buf, self.rect.x(), self.rect.y())?;
+
+        Ok(sp)
+    }
 
     ///translates up by given amount
     pub fn up(&mut self, vel: i32) {
