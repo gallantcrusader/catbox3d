@@ -3,6 +3,7 @@ use sdl2::{
     rect::Rect, rwops::RWops, surface::Surface,
 };
 use std::{
+    io::Read,
     ops::{Deref, DerefMut},
     path::Path,
     slice::IterMut,
@@ -13,13 +14,14 @@ use crate::math::vec2::Vec2Int;
 use crate::{Context, Result};
 
 /// Representation of a sprite.
-pub struct Sprite {
+pub struct Sprite<'a> {
     pub rect: Rect,
     surf: Surface<'static>,
     angle: f64,
+    bytes: &'a [u8],
 }
 
-impl Sprite {
+impl Sprite<'a> {
     /// Create a new Sprite. The `path` is relative to the current directory while running.
     ///
     /// Don't forget to call [`draw()`](Self::draw()) after this.
@@ -28,7 +30,11 @@ impl Sprite {
     /// let s = Sprite::new("duck.png", 500, 400).unwrap();
     /// ```
     pub fn new<P: AsRef<Path>>(path: P, x: i32, y: i32) -> Result<Self> {
-        let ops = RWops::from_file(path, "r")?;
+        let mut buf: Vec<u8> = Vec::new();
+        let mut f = std::fs::File::open(path).unwrap();
+        f.read_to_end(&mut buf);
+        /* let ops = RWops::from_file(path, "r")?; */
+        let ops = RWops::from_bytes(buf.as_ref())?;
         let surf = ops.load()?;
 
         let srect = surf.rect();
@@ -38,6 +44,7 @@ impl Sprite {
             rect: dest_rect,
             surf,
             angle: 0.0,
+            bytes: &buf,
         })
     }
 
@@ -60,6 +67,7 @@ impl Sprite {
             rect: dest_rect,
             surf,
             angle: 0.0,
+            bytes,
         })
     }
 
@@ -97,6 +105,8 @@ impl Sprite {
         self.rect.set_x(new_x);
         self.rect.set_y(new_y);
     }
+
+    pub fn resize(&mut self, nwidth: u32, nheight: u32) {}
 
     ///translates up by given amount
     pub fn up(&mut self, vel: i32) {
